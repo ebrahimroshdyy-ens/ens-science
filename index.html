@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grade 9 Cell Division</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: two large entry cards, one per activity, readable on a phone. */
+:root{
+  --paper:#FFF8EC; --card:#FFFFFF; --ink:#1B2050; --ink-soft:#5A5F86; --line:#E6DECB;
+  --mit:#6D28D9; --mit-soft:#EFE7FD; --mei:#0E7490; --mei-soft:#DCF0F5;
+  --shadow:0 2px 0 rgba(27,32,80,.06), 0 12px 28px -20px rgba(27,32,80,.55);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#141830; --card:#1E2342; --ink:#EDEBFF; --ink-soft:#A6ABD0; --line:#313661;
+    --mit:#C4A4FF; --mit-soft:#2C2550; --mei:#5FD0E8; --mei-soft:#143544;
+    --shadow:0 2px 0 rgba(0,0,0,.2), 0 12px 28px -20px #000; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141830; --card:#1E2342; --ink:#EDEBFF; --ink-soft:#A6ABD0; --line:#313661;
+  --mit:#C4A4FF; --mit-soft:#2C2550; --mei:#5FD0E8; --mei-soft:#143544;
+  --shadow:0 2px 0 rgba(0,0,0,.2), 0 12px 28px -20px #000; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);
+  font-family:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.55}
+.wrap{max-width:860px;margin:0 auto;padding:40px 16px 60px}
+h1{font-family:Fredoka,system-ui,sans-serif;font-size:clamp(30px,6vw,44px);margin:0 0 6px;line-height:1.1}
+.sub{margin:0 0 30px;color:var(--ink-soft);font-size:17px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+a.card{display:block;text-decoration:none;color:inherit;background:var(--card);
+  border:2px solid var(--line);border-radius:20px;padding:22px 22px 24px;box-shadow:var(--shadow);
+  transition:transform .14s, border-color .14s}
+a.card:hover,a.card:focus-visible{transform:translateY(-3px)}
+a.card.m:hover,a.card.m:focus-visible{border-color:var(--mit)}
+a.card.s:hover,a.card.s:focus-visible{border-color:var(--mei)}
+.pill{display:inline-block;font-family:Fredoka,sans-serif;font-weight:700;font-size:13px;
+  padding:3px 12px;border-radius:999px;margin-bottom:12px}
+.m .pill{background:var(--mit-soft);color:var(--mit)}
+.s .pill{background:var(--mei-soft);color:var(--mei)}
+a.card h2{font-family:Fredoka,sans-serif;font-size:26px;margin:0 0 6px;line-height:1.15}
+a.card p{margin:0 0 14px;color:var(--ink-soft);font-size:15.5px}
+.go{font-family:Fredoka,sans-serif;font-weight:600;font-size:16px}
+.m .go{color:var(--mit)} .s .go{color:var(--mei)}
+.note{margin-top:28px;border:2px solid var(--line);background:var(--card);border-radius:16px;
+  padding:14px 18px;font-size:15.5px;color:var(--ink-soft)}
+.note b{color:var(--ink);font-family:Fredoka,sans-serif}
+:focus-visible{outline:3px solid var(--mit);outline-offset:3px;border-radius:12px}
+@media (max-width:640px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cell Division</h1>
+  <p class="sub">Grade 9 Science &middot; MYP Year 4 &middot; Emirates National Schools</p>
+
+  <div class="grid">
+    <a class="card m" href="mitosis.html">
+      <span class="pill">ACTIVITY 1</span>
+      <h2>Mitosis Step by Step</h2>
+      <p>Please Make A Tiny Cell. Watch one cell become two identical cells, answer the questions, then save your answer sheet.</p>
+      <span class="go">Start &rarr;</span>
+    </a>
+    <a class="card s" href="meiosis.html">
+      <span class="pill">ACTIVITY 2</span>
+      <h2>Meiosis Step by Step</h2>
+      <p>PMAT twice. Watch one cell become four different gametes, compare it with mitosis, then save your answer sheet.</p>
+      <span class="go">Start &rarr;</span>
+    </a>
+  </div>
+
+  <p class="note"><b>Before you start:</b> type your name at the top of the activity, work through every tab,
+  then use <b>Save my answer sheet as PDF</b> on the last tab and upload that PDF to Toddle.
+  Your answers stay on your own device until you upload them.</p>
+</div>
+</body>
+</html>
