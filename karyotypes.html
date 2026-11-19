@@ -4,224 +4,161 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gamete Detective</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 <style>
-/* Layout idea: four benches — shuffle, karyotype, fault-finding, quick checks — then a save page. */
 :root{
   --paper:#FDF6E9; --card:#FFFFFF; --ink:#2A1F12; --ink-soft:#6B5B45; --line:#E7DAC2;
   --accent:#8A5A1E; --accent-soft:#F6E8D2; --teal:#0F5257; --teal-soft:#DCEDEE;
   --good:#1F7A4D; --good-soft:#DDF2E5; --bad:#B3321F; --bad-soft:#FBE3DD;
   --dok1:#2E7D63; --dok2:#9A5B14; --dok3:#7C2D8E;
-  --chrA:#6B4FA8; --chrB:#B08BD6; --xx:#C08A2E; --extra:#B3321F;
+  --chrA:#6B4FA8; --xx:#C08A2E; --extra:#B3321F;
   --shadow:0 2px 0 rgba(42,31,18,.05), 0 10px 26px -18px rgba(42,31,18,.5);
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
+  :root{
     --paper:#1C1710; --card:#2A2318; --ink:#F5EDE0; --ink-soft:#BCAC94; --line:#43382A;
     --accent:#E0A758; --accent-soft:#3A2D1A; --teal:#6FC5CC; --teal-soft:#15383B;
     --good:#7FE0AC; --good-soft:#1C3B2C; --bad:#FF9E86; --bad-soft:#3E2220;
     --dok1:#7FE0AC; --dok2:#E0A758; --dok3:#D7A6F0;
-    --chrA:#A992E0; --chrB:#CDB4E8; --xx:#E0B25E; --extra:#FF9E86;
+    --chrA:#A992E0; --xx:#E0B25E; --extra:#FF9E86;
     --shadow:0 2px 0 rgba(0,0,0,.2), 0 10px 26px -18px #000; color-scheme:dark;
   }
 }
-:root[data-theme="dark"]{
-  --paper:#1C1710; --card:#2A2318; --ink:#F5EDE0; --ink-soft:#BCAC94; --line:#43382A;
-  --accent:#E0A758; --accent-soft:#3A2D1A; --teal:#6FC5CC; --teal-soft:#15383B;
-  --good:#7FE0AC; --good-soft:#1C3B2C; --bad:#FF9E86; --bad-soft:#3E2220;
-  --dok1:#7FE0AC; --dok2:#E0A758; --dok3:#D7A6F0;
-  --chrA:#A992E0; --chrB:#CDB4E8; --xx:#E0B25E; --extra:#FF9E86;
-  --shadow:0 2px 0 rgba(0,0,0,.2), 0 10px 26px -18px #000; color-scheme:dark;
-}
 *{box-sizing:border-box}
-html,body{margin:0;padding:0}
-body{background:var(--paper);color:var(--ink);
-  font-family:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.55;
-  -webkit-text-size-adjust:100%}
-.wrap{max-width:1000px;margin:0 auto;padding:22px 16px 60px}
-h1,h2,h3{font-family:Fredoka,"Nunito Sans",system-ui,sans-serif;text-wrap:balance}
-h1{font-size:clamp(28px,5vw,42px);line-height:1.1;margin:0 0 4px}
-.sub{margin:0;color:var(--ink-soft);font-size:16px}
-.badge{display:inline-block;background:var(--accent-soft);color:var(--accent);font-weight:700;
-  font-family:Fredoka,sans-serif;padding:3px 12px;border-radius:999px;font-size:14px;margin-bottom:10px}
-.who{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:16px 0 4px;background:var(--card);
-  border:2px solid var(--line);border-radius:14px;padding:11px 14px}
-.who label{font-family:Fredoka,sans-serif;font-weight:600;font-size:15px}
-.who input{font-family:inherit;font-size:16px;color:var(--ink);background:var(--paper);
-  border:2px solid var(--line);border-radius:9px;padding:7px 11px;min-width:0}
-.who input#sName{flex:1 1 220px} .who input#sClass{width:110px}
-.tabs{display:flex;gap:8px;margin:16px 0 18px;flex-wrap:wrap}
-.tab{font-family:Fredoka,sans-serif;font-size:15.5px;font-weight:600;background:var(--card);
-  color:var(--ink-soft);border:2px solid var(--line);padding:9px 16px;border-radius:999px;cursor:pointer;transition:.15s}
-.tab:hover{border-color:var(--accent)}
-.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
-.panel[hidden]{display:none}
-.bench{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
-.bench h2{margin:0 0 4px;font-size:24px}
-.bench .lead{margin:0 0 16px;color:var(--ink-soft);font-size:15.5px}
-button.ctl{font-family:Fredoka,sans-serif;font-size:15px;font-weight:600;cursor:pointer;
-  border:2px solid var(--line);background:var(--card);color:var(--ink);padding:9px 16px;border-radius:11px;transition:.15s}
-button.ctl:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-button.ctl.go{background:var(--accent);border-color:var(--accent);color:#fff}
-button.ctl.go:hover{filter:brightness(1.08);color:#fff}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-svg{display:block;max-width:100%}
-/* shuffle */
-.gamebox{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px}
-.gchip{font-family:Fredoka,sans-serif;font-weight:700;font-size:20px;border:2px solid var(--line);
-  background:var(--paper);color:var(--ink-soft);border-radius:12px;padding:8px 20px;opacity:.45;transition:.2s}
-.gchip.found{opacity:1;border-color:var(--good);background:var(--good-soft);color:var(--good)}
-.made{font-family:Fredoka,sans-serif;font-size:19px;margin:10px 0 0}
-.bigfact{margin-top:14px;background:var(--teal-soft);color:var(--teal);border-radius:12px;padding:12px 15px;
-  font-size:16px;font-weight:600}
-.bigfact[hidden]{display:none}
-/* karyotype */
-.kcase{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.kbtn{font-family:Fredoka,sans-serif;font-weight:600;font-size:14.5px;cursor:pointer;border:2px solid var(--line);
-  background:var(--paper);color:var(--ink);padding:7px 14px;border-radius:10px}
-.kbtn[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
-.kwrap{overflow-x:auto;border:2px solid var(--line);border-radius:14px;background:var(--paper);padding:10px}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:17px;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:720px;margin:0 auto;padding:22px 16px 70px}
+.badge{display:inline-block;background:var(--accent-soft);color:var(--accent);
+  font-weight:800;font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  padding:5px 11px;border-radius:999px}
+h1{font-size:34px;margin:12px 0 4px;line-height:1.1;font-weight:800}
+.sub{color:var(--ink-soft);margin:0 0 18px;font-size:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+  padding:18px;margin:16px 0;box-shadow:var(--shadow)}
+.who{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.who label{font-weight:700;font-size:15px}
+input[type=text]{flex:1;min-width:150px;font:inherit;font-size:16px;padding:9px 12px;
+  border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
+.step{display:flex;align-items:center;gap:11px;margin:0 0 6px}
+.num{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--accent);
+  color:#fff;font-weight:800;display:grid;place-items:center;font-size:18px}
+h2{font-size:22px;margin:0;font-weight:800}
+.lead{color:var(--ink-soft);margin:4px 0 14px;font-size:16px}
+.rule{background:var(--teal-soft);border:1px solid var(--line);border-radius:12px;
+  padding:13px 15px;margin:0 0 16px}
+.rule b{color:var(--teal)}
+.rule p{margin:5px 0}
+.pick{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.pick button, .opt{font:inherit;font-size:16px;text-align:left;cursor:pointer;
+  background:var(--paper);border:1.5px solid var(--line);color:var(--ink);
+  border-radius:12px;padding:11px 14px}
+.opt{display:block;width:100%;margin:7px 0}
+.pick button:hover:not(:disabled), .opt:hover:not(:disabled){border-color:var(--accent)}
+.opt:disabled,.pick button:disabled{cursor:default}
+.right{background:var(--good-soft)!important;border-color:var(--good)!important;font-weight:700}
+.wrong{background:var(--bad-soft)!important;border-color:var(--bad)!important}
+.why{margin:9px 0 0;padding:11px 13px;border-radius:10px;background:var(--accent-soft);
+  font-size:15.5px}
+svg{display:block;width:100%;height:auto;background:var(--paper);
+  border:1px solid var(--line);border-radius:12px}
 .pairg{cursor:pointer}
-.pairg rect.hit{fill:transparent}
-.pairg.sel rect.hit{fill:var(--accent);fill-opacity:.16;stroke:var(--accent);stroke-width:1.5;rx:4}
-.pairg:hover rect.hit{fill:var(--accent);fill-opacity:.08}
-/* generic q */
-.q{border-top:1px solid var(--line);padding:14px 0 2px}
-.q:first-of-type{border-top:none}
-.lvl{display:inline-block;font-family:Fredoka,sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.04em;
-  padding:2px 9px;border-radius:999px;margin-bottom:7px;border:1.5px solid currentColor}
-.lvl.l1{color:var(--dok1)} .lvl.l2{color:var(--dok2)} .lvl.l3{color:var(--dok3)}
-.qt{margin:0 0 10px;font-size:16.5px;font-weight:600}
-.opts{display:grid;gap:7px}
-.opt{text-align:left;font-family:inherit;font-size:16px;cursor:pointer;border:2px solid var(--line);
-  background:var(--paper);color:var(--ink);padding:10px 14px;border-radius:11px;transition:.15s}
-.opt:hover:not(:disabled){border-color:var(--accent)}
-.opt:disabled{cursor:default}
-.opt.right{border-color:var(--good);background:var(--good-soft);color:var(--good);font-weight:700}
-.opt.chosen-wrong{border-color:var(--bad);background:var(--bad-soft);color:var(--bad);font-weight:700}
-.why{margin:10px 0 0;font-size:15px;background:var(--accent-soft);padding:9px 12px;border-radius:10px}
-.why[hidden]{display:none}
-textarea{width:100%;font-family:inherit;font-size:16px;color:var(--ink);background:var(--paper);
-  border:2px solid var(--line);border-radius:11px;padding:10px 13px;resize:vertical;min-height:80px}
-textarea:focus{border-color:var(--accent)}
-.forteacher{margin-top:6px;font-size:13.5px;color:var(--ink-soft);font-style:italic}
-/* fault finder */
-.gamrow{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 14px}
-.gam{border:2px solid var(--line);background:var(--paper);border-radius:14px;padding:12px 10px;text-align:center;min-width:92px;flex:1}
-.gam .n{font-family:Fredoka,sans-serif;font-size:30px;line-height:1.1}
-.gam .l{font-size:13px;color:var(--ink-soft)}
-.gam.hi{border-color:var(--extra)} .gam.lo{border-color:var(--teal)}
-.caseno{font-family:Fredoka,sans-serif;font-size:14px;color:var(--ink-soft);margin-bottom:4px}
-/* save */
-.tally{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}
-.tile{background:var(--card);border:2px solid var(--line);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow)}
-.tile .big{font-family:Fredoka,sans-serif;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
-.tile .lab{font-size:14px;color:var(--ink-soft)}
-.tile.done{border-color:var(--good)}
-.todo{margin:0 0 16px;padding:0;list-style:none;display:grid;gap:6px;font-size:15.5px;color:var(--ink-soft)}
-.todo li b{color:var(--ink)}
-.msg{font-size:15.5px;font-weight:600;min-height:26px}
+.pairg .hit{fill:transparent}
+.pairg:hover .hit{fill:var(--accent-soft)}
+.pairg.sel .hit{fill:var(--accent-soft);stroke:var(--accent);stroke-width:2}
+.tabsel{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.tabsel button{font:inherit;font-weight:700;font-size:15px;cursor:pointer;padding:8px 15px;
+  border-radius:999px;border:1.5px solid var(--line);background:var(--paper);color:var(--ink)}
+.tabsel button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.gams{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0}
+.gam{background:var(--paper);border:1.5px solid var(--line);border-radius:12px;
+  padding:12px 4px;text-align:center}
+.gam .n{font-size:30px;font-weight:800;line-height:1}
+.gam .l{font-size:12px;color:var(--ink-soft);margin-top:3px}
+.gam.hi{background:var(--bad-soft);border-color:var(--bad)}
+.gam.lo{background:var(--teal-soft);border-color:var(--teal)}
+.q{border-top:1px solid var(--line);padding-top:15px;margin-top:15px}
+.q:first-of-type{border-top:0;padding-top:0;margin-top:0}
+.tag{display:inline-block;font-size:11.5px;font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;padding:3px 9px;border-radius:999px;border:1.5px solid}
+.t1{color:var(--dok1);border-color:var(--dok1)}
+.t2{color:var(--dok2);border-color:var(--dok2)}
+.t3{color:var(--dok3);border-color:var(--dok3)}
+.qt{font-weight:700;margin:8px 0 4px;font-size:17px}
+textarea{width:100%;min-height:92px;font:inherit;font-size:16px;padding:11px;
+  border:1.5px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);
+  resize:vertical}
+.hint{font-size:14.5px;color:var(--ink-soft);font-style:italic;margin:6px 0 0}
+ul.todo{margin:8px 0 0;padding-left:20px}
+ul.todo li{margin:5px 0}
+.save{font:inherit;font-weight:800;font-size:18px;cursor:pointer;background:var(--accent);
+  color:#fff;border:0;border-radius:12px;padding:14px 22px;width:100%;margin-top:12px}
+.save:hover{filter:brightness(1.07)}
+.msg{margin:10px 0 0;font-weight:700}
 .msg.ok{color:var(--good)} .msg.no{color:var(--bad)}
-.keyidea{margin-top:18px;border:2px solid var(--line);background:var(--card);border-radius:16px;padding:14px 18px;font-size:16px}
-.keyidea b{font-family:Fredoka,sans-serif}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:8px}
-@media (max-width:760px){ .tally{grid-template-columns:1fr} }
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
-.chr{transition:transform .5s cubic-bezier(.65,.02,.32,1)}
+.done{color:var(--good);font-weight:800}
+.foot{text-align:center;color:var(--ink-soft);font-size:13.5px;margin-top:26px}
 </style>
 </head>
 <body>
 <div class="wrap">
+
   <span class="badge">Grade 9 Science</span>
   <h1>Gamete Detective</h1>
-  <p class="sub">Karyotypes, nondisjunction and variation &mdash; work out what happened from the evidence.</p>
+  <p class="sub">Something went wrong in meiosis. Your job is to find out where.</p>
 
-  <div class="who">
+  <div class="card who">
     <label for="sName">Name</label>
-    <input id="sName" type="text" placeholder="Type your full name" autocomplete="name">
+    <input type="text" id="sName" placeholder="Type your full name">
     <label for="sClass">Class</label>
-    <input id="sClass" type="text" placeholder="9__">
+    <input type="text" id="sClass" placeholder="9__" style="max-width:90px;flex:0 0 90px">
   </div>
 
-  <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-1" aria-selected="true">1. Shuffle</button>
-    <button class="tab" role="tab" id="tab-2" aria-selected="false">2. Karyotype</button>
-    <button class="tab" role="tab" id="tab-3" aria-selected="false">3. Where did it go wrong?</button>
-    <button class="tab" role="tab" id="tab-4" aria-selected="false">4. Quick checks</button>
-    <button class="tab" role="tab" id="tab-5" aria-selected="false">5. Save my work</button>
+  <!-- STEP 1 -->
+  <div class="card">
+    <div class="step"><div class="num">1</div><h2>Count the chromosomes</h2></div>
+    <p class="lead">A karyotype lines up all the chromosomes in pairs. Every group should have <b>2</b>. Click the group that does not.</p>
+    <div class="tabsel" id="ksel"></div>
+    <svg id="karyoSvg" viewBox="0 0 560 330" role="img" aria-label="Karyotype chromosome lineup"></svg>
+    <p class="why" id="kreport"></p>
   </div>
 
-  <!-- 1 SHUFFLE -->
-  <section class="panel" id="p-1" role="tabpanel">
-    <div class="bench">
-      <h2>Shuffle the pairs</h2>
-      <p class="lead">In meiosis I, each homologous pair can face either way. Flip them and see which gametes come out. Find all four types.</p>
-      <svg id="shuffleSvg" viewBox="0 0 420 220" role="img" aria-label="Two homologous pairs lined up at the equator"></svg>
-      <div class="row" style="margin-top:12px">
-        <button class="ctl" id="flip1">Flip pair 1</button>
-        <button class="ctl" id="flip2">Flip pair 2</button>
-        <button class="ctl go" id="rand">Shuffle randomly</button>
-      </div>
-      <p class="made" id="made"></p>
-      <div class="gamebox" id="gamebox"></div>
-      <div class="bigfact" id="bigfact" hidden></div>
+  <!-- STEP 2 -->
+  <div class="card">
+    <div class="step"><div class="num">2</div><h2>Find the mistake</h2></div>
+    <p class="lead">One cell made 4 gametes. The number in each box is how many copies of chromosome 21 it got. <b>Normal = 2.</b></p>
+    <div class="rule">
+      <p><b>The rule:</b></p>
+      <p>All <b>4</b> gametes wrong &rarr; the mistake was in <b>meiosis I</b></p>
+      <p>Only <b>2</b> gametes wrong &rarr; the mistake was in <b>meiosis II</b></p>
     </div>
-    <div class="bench" id="q1box"></div>
-  </section>
+    <div class="tabsel" id="fsel"></div>
+    <div class="gams" id="gamrow"></div>
+    <div id="faultOpts"></div>
+    <p class="why" id="faultWhy" hidden></p>
+  </div>
 
-  <!-- 2 KARYOTYPE -->
-  <section class="panel" id="p-2" role="tabpanel" hidden>
-    <div class="bench">
-      <h2>Karyotype bench</h2>
-      <p class="lead">A karyotype is an organised image of the chromosomes, paired and arranged from largest to smallest. Pick a sample, count it, then click the pair that looks wrong.</p>
-      <div class="kcase" id="kcase"></div>
-      <div class="kwrap"><svg id="karyoSvg" viewBox="0 0 760 330" role="img" aria-label="Karyotype"></svg></div>
-      <p class="made" id="kreport"></p>
-    </div>
-    <div class="bench" id="q2box"></div>
-  </section>
+  <!-- STEP 3 -->
+  <div class="card">
+    <div class="step"><div class="num">3</div><h2>Answer 3 questions</h2></div>
+    <p class="lead">Tap your answer. The last one you type yourself.</p>
+    <div id="qbox"></div>
+  </div>
 
-  <!-- 3 FAULT -->
-  <section class="panel" id="p-3" role="tabpanel" hidden>
-    <div class="bench">
-      <h2>Where did it go wrong?</h2>
-      <p class="lead">One cell went through meiosis and made four gametes. The numbers below are how many copies of one chromosome each gamete received. Decide which division failed.</p>
-      <p class="caseno" id="caseno"></p>
-      <div class="gamrow" id="gamrow"></div>
-      <div class="opts" id="faultOpts"></div>
-      <p class="why" id="faultWhy" hidden></p>
-      <div class="row" style="margin-top:12px"><button class="ctl" id="nextCase">Next case &rarr;</button></div>
-    </div>
-    <div class="bench" id="q3box"></div>
-  </section>
+  <!-- STEP 4 -->
+  <div class="card">
+    <div class="step"><div class="num">4</div><h2>Save and upload</h2></div>
+    <p class="lead">Save your PDF, then upload it to Toddle.</p>
+    <ul class="todo" id="todo"></ul>
+    <button class="save" id="savePdf">Save my work as PDF</button>
+    <p class="msg" id="saveMsg"></p>
+  </div>
 
-  <!-- 4 QUICK -->
-  <section class="panel" id="p-4" role="tabpanel" hidden>
-    <div class="bench" id="q4box"></div>
-  </section>
-
-  <!-- 5 SAVE -->
-  <section class="panel" id="p-5" role="tabpanel" hidden>
-    <div class="bench">
-      <h2>Save my work</h2>
-      <p class="lead">Check it is all finished, save the PDF, then upload it to Toddle.</p>
-      <div class="tally">
-        <div class="tile" id="tA"><div class="big" id="nA">0 / 4</div><div class="lab">gamete types found</div></div>
-        <div class="tile" id="tB"><div class="big" id="nB">0 / 12</div><div class="lab">questions right</div></div>
-        <div class="tile" id="tC"><div class="big" id="nC">0 / 4</div><div class="lab">fault cases solved</div></div>
-      </div>
-      <ul class="todo" id="todo"></ul>
-      <div class="row"><button class="ctl go" id="savePdf">Save my answer sheet as PDF</button>
-      <button class="ctl" id="copyAll">Copy my answers as text</button></div>
-      <p class="msg" id="saveMsg"></p>
-    </div>
-    <div class="keyidea"><b>What to do next:</b> open Toddle, find <b>Gamete Detective</b>, and upload the PDF you just saved.
-    This is formative work, so an honest wrong answer is worth more than a blank box.</div>
-  </section>
+  <p class="foot">Emirates National Schools &middot; MYP Year 4 Science</p>
 </div>
 
-<script>/* jsPDF 2.5.1 (MIT) bundled so this page needs no internet */
+<script>
+/* jsPDF 2.5.1 (MIT) bundled so this page needs no internet */
 /** @license
  *
  * jsPDF - PDF Document creation from JavaScript
@@ -620,162 +557,104 @@ function(t){var e=function(){return void 0===this.internal.vFS&&(this.internal.v
    */
 function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,o,s,c,u=e,l=[[0,3,0,1,0,0,0],[0,3,0,1,2,2,0],[0,3,0,17,2,0,1],[0,3,5,5,4,1,0],[0,3,21,21,4,0,1],[0,3,5,5,4,2,0]],h=[[2,0,1,1,0,1,0],[2,0,1,1,0,2,0],[2,0,2,1,3,2,0],[2,0,2,33,3,1,1]],f={L:0,R:1,EN:2,AN:3,N:4,B:5,S:6},d={0:0,5:1,6:2,7:3,32:4,251:5,254:6,255:7},p=["(",")","(","<",">","<","[","]","[","{","}","{","«","»","«","‹","›","‹","⁅","⁆","⁅","⁽","⁾","⁽","₍","₎","₍","≤","≥","≤","〈","〉","〈","﹙","﹚","﹙","﹛","﹜","﹛","﹝","﹞","﹝","﹤","﹥","﹤"],g=new RegExp(/^([1-4|9]|1[0-9]|2[0-9]|3[0168]|4[04589]|5[012]|7[78]|159|16[0-9]|17[0-2]|21[569]|22[03489]|250)$/),m=!1,v=0;this.__bidiEngine__={};var b=function(t){var e=t.charCodeAt(),r=e>>8,n=d[r];return void 0!==n?u[256*n+(255&e)]:252===r||253===r?"AL":g.test(r)?"L":8===r?"R":"N"},y=function(t){for(var e,r=0;r<t.length;r++){if("L"===(e=b(t.charAt(r))))return!1;if("R"===e)return!0}return!1},w=function(t,e,o,s){var c,u,l,h,f=e[s];switch(f){case"L":case"R":m=!1;break;case"N":case"AN":break;case"EN":m&&(f="AN");break;case"AL":m=!0,f="R";break;case"WS":f="N";break;case"CS":s<1||s+1>=e.length||"EN"!==(c=o[s-1])&&"AN"!==c||"EN"!==(u=e[s+1])&&"AN"!==u?f="N":m&&(u="AN"),f=u===c?u:"N";break;case"ES":f="EN"===(c=s>0?o[s-1]:"B")&&s+1<e.length&&"EN"===e[s+1]?"EN":"N";break;case"ET":if(s>0&&"EN"===o[s-1]){f="EN";break}if(m){f="N";break}for(l=s+1,h=e.length;l<h&&"ET"===e[l];)l++;f=l<h&&"EN"===e[l]?"EN":"N";break;case"NSM":if(i&&!a){for(h=e.length,l=s+1;l<h&&"NSM"===e[l];)l++;if(l<h){var d=t[s],p=d>=1425&&d<=2303||64286===d;if(c=e[l],p&&("R"===c||"AL"===c)){f="R";break}}}f=s<1||"B"===(c=e[s-1])?"N":o[s-1];break;case"B":m=!1,r=!0,f=v;break;case"S":n=!0,f="N";break;case"LRE":case"RLE":case"LRO":case"RLO":case"PDF":m=!1;break;case"BN":f="N"}return f},N=function(t,e,r){var n=t.split("");return r&&L(n,r,{hiLevel:v}),n.reverse(),e&&e.reverse(),n.join("")},L=function(t,e,i){var a,o,s,c,u,d=-1,p=t.length,g=0,y=[],N=v?h:l,L=[];for(m=!1,r=!1,n=!1,o=0;o<p;o++)L[o]=b(t[o]);for(s=0;s<p;s++){if(u=g,y[s]=w(t,L,y,s),a=240&(g=N[u][f[y[s]]]),g&=15,e[s]=c=N[g][5],a>0)if(16===a){for(o=d;o<s;o++)e[o]=1;d=-1}else d=-1;if(N[g][6])-1===d&&(d=s);else if(d>-1){for(o=d;o<s;o++)e[o]=c;d=-1}"B"===L[s]&&(e[s]=0),i.hiLevel|=c}n&&function(t,e,r){for(var n=0;n<r;n++)if("S"===t[n]){e[n]=v;for(var i=n-1;i>=0&&"WS"===t[i];i--)e[i]=v}}(L,e,p)},A=function(t,e,n,i,a){if(!(a.hiLevel<t)){if(1===t&&1===v&&!r)return e.reverse(),void(n&&n.reverse());for(var o,s,c,u,l=e.length,h=0;h<l;){if(i[h]>=t){for(c=h+1;c<l&&i[c]>=t;)c++;for(u=h,s=c-1;u<s;u++,s--)o=e[u],e[u]=e[s],e[s]=o,n&&(o=n[u],n[u]=n[s],n[s]=o);h=c}h++}}},x=function(t,e,r){var n=t.split(""),i={hiLevel:v};return r||(r=[]),L(n,r,i),function(t,e,r){if(0!==r.hiLevel&&c)for(var n,i=0;i<t.length;i++)1===e[i]&&(n=p.indexOf(t[i]))>=0&&(t[i]=p[n+1])}(n,r,i),A(2,n,e,r,i),A(1,n,e,r,i),n.join("")};return this.__bidiEngine__.doBidiReorder=function(t,e,r){if(function(t,e){if(e)for(var r=0;r<t.length;r++)e[r]=r;void 0===a&&(a=y(t)),void 0===s&&(s=y(t))}(t,e),i||!o||s)if(i&&o&&a^s)v=a?1:0,t=N(t,e,r);else if(!i&&o&&s)v=a?1:0,t=x(t,e,r),t=N(t,e);else if(!i||a||o||s){if(i&&!o&&a^s)t=N(t,e),a?(v=0,t=x(t,e,r)):(v=1,t=x(t,e,r),t=N(t,e));else if(i&&a&&!o&&s)v=1,t=x(t,e,r),t=N(t,e);else if(!i&&!o&&a^s){var n=c;a?(v=1,t=x(t,e,r),v=0,c=!1,t=x(t,e,r),c=n):(v=0,t=x(t,e,r),t=N(t,e),v=1,c=!1,t=x(t,e,r),c=n,t=N(t,e))}}else v=0,t=x(t,e,r);else v=a?1:0,t=x(t,e,r);return t},this.__bidiEngine__.setOptions=function(t){t&&(i=t.isInputVisual,o=t.isOutputVisual,a=t.isInputRtl,s=t.isOutputRtl,c=t.isSymmetricSwapping)},this.__bidiEngine__.setOptions(t),this.__bidiEngine__};var e=["BN","BN","BN","BN","BN","BN","BN","BN","BN","S","B","S","WS","B","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","B","B","B","S","WS","N","N","ET","ET","ET","N","N","N","N","N","ES","CS","ES","CS","CS","EN","EN","EN","EN","EN","EN","EN","EN","EN","EN","CS","N","N","N","N","N","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","N","N","N","N","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","N","N","N","BN","BN","BN","BN","BN","BN","B","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","BN","CS","N","ET","ET","ET","ET","N","N","N","N","L","N","N","BN","N","N","ET","ET","EN","EN","N","L","N","N","N","EN","L","N","N","N","N","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","N","L","L","L","L","L","L","L","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","L","N","N","N","N","N","ET","N","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","R","NSM","R","NSM","NSM","R","NSM","NSM","R","NSM","N","N","N","N","N","N","N","N","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","N","N","N","N","N","R","R","R","R","R","N","N","N","N","N","N","N","N","N","N","N","AN","AN","AN","AN","AN","AN","N","N","AL","ET","ET","AL","CS","AL","N","N","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","AL","AL","N","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","AN","AN","AN","AN","AN","AN","AN","AN","AN","AN","ET","AN","AN","AL","AL","AL","NSM","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","NSM","NSM","NSM","NSM","NSM","NSM","NSM","AN","N","NSM","NSM","NSM","NSM","NSM","NSM","AL","AL","NSM","NSM","N","NSM","NSM","NSM","NSM","AL","AL","EN","EN","EN","EN","EN","EN","EN","EN","EN","EN","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","N","AL","AL","NSM","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","N","N","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","AL","N","N","N","N","N","N","N","N","N","N","N","N","N","N","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","R","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","R","R","N","N","N","N","R","N","N","N","N","N","WS","WS","WS","WS","WS","WS","WS","WS","WS","WS","WS","BN","BN","BN","L","R","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","WS","B","LRE","RLE","PDF","LRO","RLO","CS","ET","ET","ET","ET","ET","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","CS","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","WS","BN","BN","BN","BN","BN","N","LRI","RLI","FSI","PDI","BN","BN","BN","BN","BN","BN","EN","L","N","N","EN","EN","EN","EN","EN","EN","ES","ES","N","N","N","L","EN","EN","EN","EN","EN","EN","EN","EN","EN","EN","ES","ES","N","N","N","N","L","L","L","L","L","L","L","L","L","L","L","L","L","N","N","N","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","ET","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","L","L","L","L","L","L","L","N","N","N","N","N","N","N","N","N","N","N","N","L","L","L","L","L","N","N","N","N","N","R","NSM","R","R","R","R","R","R","R","R","R","R","ES","R","R","R","R","R","R","R","R","R","R","R","R","R","N","R","R","R","R","R","N","R","N","R","R","N","R","R","N","R","R","R","R","R","R","R","R","R","R","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","NSM","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","CS","N","CS","N","N","CS","N","N","N","N","N","N","N","N","N","ET","N","N","ES","ES","N","N","N","N","N","ET","ET","N","N","N","N","N","AL","AL","AL","AL","AL","N","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","AL","N","N","BN","N","N","N","ET","ET","ET","N","N","N","N","N","ES","CS","ES","CS","CS","EN","EN","EN","EN","EN","EN","EN","EN","EN","EN","CS","N","N","N","N","N","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","N","N","N","N","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","N","N","N","N","N","N","N","N","N","N","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","L","N","N","N","L","L","L","L","L","L","N","N","L","L","L","L","L","L","N","N","L","L","L","L","L","L","N","N","L","L","L","N","N","N","ET","ET","N","N","N","ET","ET","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N","N"],r=new t.__bidiEngine__({isInputVisual:!0});t.API.events.push(["postProcessText",function(t){var e=t.text,n=(t.x,t.y,t.options||{}),i=(t.mutex,n.lang,[]);if(n.isInputVisual="boolean"!=typeof n.isInputVisual||n.isInputVisual,r.setOptions(n),"[object Array]"===Object.prototype.toString.call(e)){var a=0;for(i=[],a=0;a<e.length;a+=1)"[object Array]"===Object.prototype.toString.call(e[a])?i.push([r.doBidiReorder(e[a][0]),e[a][1],e[a][2]]):i.push([r.doBidiReorder(e[a])]);t.text=i}else t.text=r.doBidiReorder(e);r.setOptions({isInputVisual:!0})}])}(M),M.API.TTFFont=function(){function t(t){var e;if(this.rawData=t,e=this.contents=new Te(t),this.contents.pos=4,"ttcf"===e.readString(4))throw new Error("TTCF not supported.");e.pos=0,this.parse(),this.subset=new ar(this),this.registerTTF()}return t.open=function(e){return new t(e)},t.prototype.parse=function(){return this.directory=new Ue(this.contents),this.head=new We(this),this.name=new Ze(this),this.cmap=new Ge(this),this.toUnicode={},this.hhea=new Ye(this),this.maxp=new $e(this),this.hmtx=new Qe(this),this.post=new Xe(this),this.os2=new Je(this),this.loca=new ir(this),this.glyf=new er(this),this.ascender=this.os2.exists&&this.os2.ascender||this.hhea.ascender,this.decender=this.os2.exists&&this.os2.decender||this.hhea.decender,this.lineGap=this.os2.exists&&this.os2.lineGap||this.hhea.lineGap,this.bbox=[this.head.xMin,this.head.yMin,this.head.xMax,this.head.yMax]},t.prototype.registerTTF=function(){var t,e,r,n,i;if(this.scaleFactor=1e3/this.head.unitsPerEm,this.bbox=function(){var e,r,n,i;for(i=[],e=0,r=(n=this.bbox).length;e<r;e++)t=n[e],i.push(Math.round(t*this.scaleFactor));return i}.call(this),this.stemV=0,this.post.exists?(r=255&(n=this.post.italic_angle),0!=(32768&(e=n>>16))&&(e=-(1+(65535^e))),this.italicAngle=+(e+"."+r)):this.italicAngle=0,this.ascender=Math.round(this.ascender*this.scaleFactor),this.decender=Math.round(this.decender*this.scaleFactor),this.lineGap=Math.round(this.lineGap*this.scaleFactor),this.capHeight=this.os2.exists&&this.os2.capHeight||this.ascender,this.xHeight=this.os2.exists&&this.os2.xHeight||0,this.familyClass=(this.os2.exists&&this.os2.familyClass||0)>>8,this.isSerif=1===(i=this.familyClass)||2===i||3===i||4===i||5===i||7===i,this.isScript=10===this.familyClass,this.flags=0,this.post.isFixedPitch&&(this.flags|=1),this.isSerif&&(this.flags|=2),this.isScript&&(this.flags|=8),0!==this.italicAngle&&(this.flags|=64),this.flags|=32,!this.cmap.unicode)throw new Error("No unicode cmap for font")},t.prototype.characterToGlyph=function(t){var e;return(null!=(e=this.cmap.unicode)?e.codeMap[t]:void 0)||0},t.prototype.widthOfGlyph=function(t){var e;return e=1e3/this.head.unitsPerEm,this.hmtx.forGlyph(t).advance*e},t.prototype.widthOfString=function(t,e,r){var n,i,a,o;for(a=0,i=0,o=(t=""+t).length;0<=o?i<o:i>o;i=0<=o?++i:--i)n=t.charCodeAt(i),a+=this.widthOfGlyph(this.characterToGlyph(n))+r*(1e3/e)||0;return a*(e/1e3)},t.prototype.lineHeight=function(t,e){var r;return null==e&&(e=!1),r=e?this.lineGap:0,(this.ascender+r-this.decender)/1e3*t},t}();var Re,Te=function(){function t(t){this.data=null!=t?t:[],this.pos=0,this.length=this.data.length}return t.prototype.readByte=function(){return this.data[this.pos++]},t.prototype.writeByte=function(t){return this.data[this.pos++]=t},t.prototype.readUInt32=function(){return 16777216*this.readByte()+(this.readByte()<<16)+(this.readByte()<<8)+this.readByte()},t.prototype.writeUInt32=function(t){return this.writeByte(t>>>24&255),this.writeByte(t>>16&255),this.writeByte(t>>8&255),this.writeByte(255&t)},t.prototype.readInt32=function(){var t;return(t=this.readUInt32())>=2147483648?t-4294967296:t},t.prototype.writeInt32=function(t){return t<0&&(t+=4294967296),this.writeUInt32(t)},t.prototype.readUInt16=function(){return this.readByte()<<8|this.readByte()},t.prototype.writeUInt16=function(t){return this.writeByte(t>>8&255),this.writeByte(255&t)},t.prototype.readInt16=function(){var t;return(t=this.readUInt16())>=32768?t-65536:t},t.prototype.writeInt16=function(t){return t<0&&(t+=65536),this.writeUInt16(t)},t.prototype.readString=function(t){var e,r;for(r=[],e=0;0<=t?e<t:e>t;e=0<=t?++e:--e)r[e]=String.fromCharCode(this.readByte());return r.join("")},t.prototype.writeString=function(t){var e,r,n;for(n=[],e=0,r=t.length;0<=r?e<r:e>r;e=0<=r?++e:--e)n.push(this.writeByte(t.charCodeAt(e)));return n},t.prototype.readShort=function(){return this.readInt16()},t.prototype.writeShort=function(t){return this.writeInt16(t)},t.prototype.readLongLong=function(){var t,e,r,n,i,a,o,s;return t=this.readByte(),e=this.readByte(),r=this.readByte(),n=this.readByte(),i=this.readByte(),a=this.readByte(),o=this.readByte(),s=this.readByte(),128&t?-1*(72057594037927940*(255^t)+281474976710656*(255^e)+1099511627776*(255^r)+4294967296*(255^n)+16777216*(255^i)+65536*(255^a)+256*(255^o)+(255^s)+1):72057594037927940*t+281474976710656*e+1099511627776*r+4294967296*n+16777216*i+65536*a+256*o+s},t.prototype.writeLongLong=function(t){var e,r;return e=Math.floor(t/4294967296),r=4294967295&t,this.writeByte(e>>24&255),this.writeByte(e>>16&255),this.writeByte(e>>8&255),this.writeByte(255&e),this.writeByte(r>>24&255),this.writeByte(r>>16&255),this.writeByte(r>>8&255),this.writeByte(255&r)},t.prototype.readInt=function(){return this.readInt32()},t.prototype.writeInt=function(t){return this.writeInt32(t)},t.prototype.read=function(t){var e,r;for(e=[],r=0;0<=t?r<t:r>t;r=0<=t?++r:--r)e.push(this.readByte());return e},t.prototype.write=function(t){var e,r,n,i;for(i=[],r=0,n=t.length;r<n;r++)e=t[r],i.push(this.writeByte(e));return i},t}(),Ue=function(){var t;function e(t){var e,r,n;for(this.scalarType=t.readInt(),this.tableCount=t.readShort(),this.searchRange=t.readShort(),this.entrySelector=t.readShort(),this.rangeShift=t.readShort(),this.tables={},r=0,n=this.tableCount;0<=n?r<n:r>n;r=0<=n?++r:--r)e={tag:t.readString(4),checksum:t.readInt(),offset:t.readInt(),length:t.readInt()},this.tables[e.tag]=e}return e.prototype.encode=function(e){var r,n,i,a,o,s,c,u,l,h,f,d,p;for(p in f=Object.keys(e).length,s=Math.log(2),l=16*Math.floor(Math.log(f)/s),a=Math.floor(l/s),u=16*f-l,(n=new Te).writeInt(this.scalarType),n.writeShort(f),n.writeShort(l),n.writeShort(a),n.writeShort(u),i=16*f,c=n.pos+i,o=null,d=[],e)for(h=e[p],n.writeString(p),n.writeInt(t(h)),n.writeInt(c),n.writeInt(h.length),d=d.concat(h),"head"===p&&(o=c),c+=h.length;c%4;)d.push(0),c++;return n.write(d),r=2981146554-t(n.data),n.pos=o+8,n.writeUInt32(r),n.data},t=function(t){var e,r,n,i;for(t=tr.call(t);t.length%4;)t.push(0);for(n=new Te(t),r=0,e=0,i=t.length;e<i;e=e+=4)r+=n.readUInt32();return 4294967295&r},e}(),ze={}.hasOwnProperty,He=function(t,e){for(var r in e)ze.call(e,r)&&(t[r]=e[r]);function n(){this.constructor=t}return n.prototype=e.prototype,t.prototype=new n,t.__super__=e.prototype,t},We=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="head",e.prototype.parse=function(t){return t.pos=this.offset,this.version=t.readInt(),this.revision=t.readInt(),this.checkSumAdjustment=t.readInt(),this.magicNumber=t.readInt(),this.flags=t.readShort(),this.unitsPerEm=t.readShort(),this.created=t.readLongLong(),this.modified=t.readLongLong(),this.xMin=t.readShort(),this.yMin=t.readShort(),this.xMax=t.readShort(),this.yMax=t.readShort(),this.macStyle=t.readShort(),this.lowestRecPPEM=t.readShort(),this.fontDirectionHint=t.readShort(),this.indexToLocFormat=t.readShort(),this.glyphDataFormat=t.readShort()},e.prototype.encode=function(t){var e;return(e=new Te).writeInt(this.version),e.writeInt(this.revision),e.writeInt(this.checkSumAdjustment),e.writeInt(this.magicNumber),e.writeShort(this.flags),e.writeShort(this.unitsPerEm),e.writeLongLong(this.created),e.writeLongLong(this.modified),e.writeShort(this.xMin),e.writeShort(this.yMin),e.writeShort(this.xMax),e.writeShort(this.yMax),e.writeShort(this.macStyle),e.writeShort(this.lowestRecPPEM),e.writeShort(this.fontDirectionHint),e.writeShort(t),e.writeShort(this.glyphDataFormat),e.data},e}(Re=function(){function t(t){var e;this.file=t,e=this.file.directory.tables[this.tag],this.exists=!!e,e&&(this.offset=e.offset,this.length=e.length,this.parse(this.file.contents))}return t.prototype.parse=function(){},t.prototype.encode=function(){},t.prototype.raw=function(){return this.exists?(this.file.contents.pos=this.offset,this.file.contents.read(this.length)):null},t}()),Ve=function(){function t(t,e){var r,n,i,a,o,s,c,u,l,h,f,d,p,g,m,v,b;switch(this.platformID=t.readUInt16(),this.encodingID=t.readShort(),this.offset=e+t.readInt(),l=t.pos,t.pos=this.offset,this.format=t.readUInt16(),this.length=t.readUInt16(),this.language=t.readUInt16(),this.isUnicode=3===this.platformID&&1===this.encodingID&&4===this.format||0===this.platformID&&4===this.format,this.codeMap={},this.format){case 0:for(s=0;s<256;++s)this.codeMap[s]=t.readByte();break;case 4:for(f=t.readUInt16(),h=f/2,t.pos+=6,i=function(){var e,r;for(r=[],s=e=0;0<=h?e<h:e>h;s=0<=h?++e:--e)r.push(t.readUInt16());return r}(),t.pos+=2,p=function(){var e,r;for(r=[],s=e=0;0<=h?e<h:e>h;s=0<=h?++e:--e)r.push(t.readUInt16());return r}(),c=function(){var e,r;for(r=[],s=e=0;0<=h?e<h:e>h;s=0<=h?++e:--e)r.push(t.readUInt16());return r}(),u=function(){var e,r;for(r=[],s=e=0;0<=h?e<h:e>h;s=0<=h?++e:--e)r.push(t.readUInt16());return r}(),n=(this.length-t.pos+this.offset)/2,o=function(){var e,r;for(r=[],s=e=0;0<=n?e<n:e>n;s=0<=n?++e:--e)r.push(t.readUInt16());return r}(),s=m=0,b=i.length;m<b;s=++m)for(g=i[s],r=v=d=p[s];d<=g?v<=g:v>=g;r=d<=g?++v:--v)0===u[s]?a=r+c[s]:0!==(a=o[u[s]/2+(r-d)-(h-s)]||0)&&(a+=c[s]),this.codeMap[r]=65535&a}t.pos=l}return t.encode=function(t,e){var r,n,i,a,o,s,c,u,l,h,f,d,p,g,m,v,b,y,w,N,L,A,x,S,_,P,k,F,I,C,j,O,B,M,E,q,D,R,T,U,z,H,W,V,G,Y;switch(F=new Te,a=Object.keys(t).sort((function(t,e){return t-e})),e){case"macroman":for(p=0,g=function(){var t=[];for(d=0;d<256;++d)t.push(0);return t}(),v={0:0},i={},I=0,B=a.length;I<B;I++)null==v[W=t[n=a[I]]]&&(v[W]=++p),i[n]={old:t[n],new:v[t[n]]},g[n]=v[t[n]];return F.writeUInt16(1),F.writeUInt16(0),F.writeUInt32(12),F.writeUInt16(0),F.writeUInt16(262),F.writeUInt16(0),F.write(g),{charMap:i,subtable:F.data,maxGlyphID:p+1};case"unicode":for(P=[],l=[],b=0,v={},r={},m=c=null,C=0,M=a.length;C<M;C++)null==v[w=t[n=a[C]]]&&(v[w]=++b),r[n]={old:w,new:v[w]},o=v[w]-n,null!=m&&o===c||(m&&l.push(m),P.push(n),c=o),m=n;for(m&&l.push(m),l.push(65535),P.push(65535),S=2*(x=P.length),A=2*Math.pow(Math.log(x)/Math.LN2,2),h=Math.log(A/2)/Math.LN2,L=2*x-A,s=[],N=[],f=[],d=j=0,E=P.length;j<E;d=++j){if(_=P[d],u=l[d],65535===_){s.push(0),N.push(0);break}if(_-(k=r[_].new)>=32768)for(s.push(0),N.push(2*(f.length+x-d)),n=O=_;_<=u?O<=u:O>=u;n=_<=u?++O:--O)f.push(r[n].new);else s.push(k-_),N.push(0)}for(F.writeUInt16(3),F.writeUInt16(1),F.writeUInt32(12),F.writeUInt16(4),F.writeUInt16(16+8*x+2*f.length),F.writeUInt16(0),F.writeUInt16(S),F.writeUInt16(A),F.writeUInt16(h),F.writeUInt16(L),z=0,q=l.length;z<q;z++)n=l[z],F.writeUInt16(n);for(F.writeUInt16(0),H=0,D=P.length;H<D;H++)n=P[H],F.writeUInt16(n);for(V=0,R=s.length;V<R;V++)o=s[V],F.writeUInt16(o);for(G=0,T=N.length;G<T;G++)y=N[G],F.writeUInt16(y);for(Y=0,U=f.length;Y<U;Y++)p=f[Y],F.writeUInt16(p);return{charMap:r,subtable:F.data,maxGlyphID:b+1}}},t}(),Ge=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="cmap",e.prototype.parse=function(t){var e,r,n;for(t.pos=this.offset,this.version=t.readUInt16(),n=t.readUInt16(),this.tables=[],this.unicode=null,r=0;0<=n?r<n:r>n;r=0<=n?++r:--r)e=new Ve(t,this.offset),this.tables.push(e),e.isUnicode&&null==this.unicode&&(this.unicode=e);return!0},e.encode=function(t,e){var r,n;return null==e&&(e="macroman"),r=Ve.encode(t,e),(n=new Te).writeUInt16(0),n.writeUInt16(1),r.table=n.data.concat(r.subtable),r},e}(Re),Ye=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="hhea",e.prototype.parse=function(t){return t.pos=this.offset,this.version=t.readInt(),this.ascender=t.readShort(),this.decender=t.readShort(),this.lineGap=t.readShort(),this.advanceWidthMax=t.readShort(),this.minLeftSideBearing=t.readShort(),this.minRightSideBearing=t.readShort(),this.xMaxExtent=t.readShort(),this.caretSlopeRise=t.readShort(),this.caretSlopeRun=t.readShort(),this.caretOffset=t.readShort(),t.pos+=8,this.metricDataFormat=t.readShort(),this.numberOfMetrics=t.readUInt16()},e}(Re),Je=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="OS/2",e.prototype.parse=function(t){if(t.pos=this.offset,this.version=t.readUInt16(),this.averageCharWidth=t.readShort(),this.weightClass=t.readUInt16(),this.widthClass=t.readUInt16(),this.type=t.readShort(),this.ySubscriptXSize=t.readShort(),this.ySubscriptYSize=t.readShort(),this.ySubscriptXOffset=t.readShort(),this.ySubscriptYOffset=t.readShort(),this.ySuperscriptXSize=t.readShort(),this.ySuperscriptYSize=t.readShort(),this.ySuperscriptXOffset=t.readShort(),this.ySuperscriptYOffset=t.readShort(),this.yStrikeoutSize=t.readShort(),this.yStrikeoutPosition=t.readShort(),this.familyClass=t.readShort(),this.panose=function(){var e,r;for(r=[],e=0;e<10;++e)r.push(t.readByte());return r}(),this.charRange=function(){var e,r;for(r=[],e=0;e<4;++e)r.push(t.readInt());return r}(),this.vendorID=t.readString(4),this.selection=t.readShort(),this.firstCharIndex=t.readShort(),this.lastCharIndex=t.readShort(),this.version>0&&(this.ascent=t.readShort(),this.descent=t.readShort(),this.lineGap=t.readShort(),this.winAscent=t.readShort(),this.winDescent=t.readShort(),this.codePageRange=function(){var e,r;for(r=[],e=0;e<2;e=++e)r.push(t.readInt());return r}(),this.version>1))return this.xHeight=t.readShort(),this.capHeight=t.readShort(),this.defaultChar=t.readShort(),this.breakChar=t.readShort(),this.maxContext=t.readShort()},e}(Re),Xe=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="post",e.prototype.parse=function(t){var e,r,n;switch(t.pos=this.offset,this.format=t.readInt(),this.italicAngle=t.readInt(),this.underlinePosition=t.readShort(),this.underlineThickness=t.readShort(),this.isFixedPitch=t.readInt(),this.minMemType42=t.readInt(),this.maxMemType42=t.readInt(),this.minMemType1=t.readInt(),this.maxMemType1=t.readInt(),this.format){case 65536:break;case 131072:var i;for(r=t.readUInt16(),this.glyphNameIndex=[],i=0;0<=r?i<r:i>r;i=0<=r?++i:--i)this.glyphNameIndex.push(t.readUInt16());for(this.names=[],n=[];t.pos<this.offset+this.length;)e=t.readByte(),n.push(this.names.push(t.readString(e)));return n;case 151552:return r=t.readUInt16(),this.offsets=t.read(r);case 196608:break;case 262144:return this.map=function(){var e,r,n;for(n=[],i=e=0,r=this.file.maxp.numGlyphs;0<=r?e<r:e>r;i=0<=r?++e:--e)n.push(t.readUInt32());return n}.call(this)}},e}(Re),Ke=function(t,e){this.raw=t,this.length=t.length,this.platformID=e.platformID,this.encodingID=e.encodingID,this.languageID=e.languageID},Ze=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="name",e.prototype.parse=function(t){var e,r,n,i,a,o,s,c,u,l,h;for(t.pos=this.offset,t.readShort(),e=t.readShort(),o=t.readShort(),r=[],i=0;0<=e?i<e:i>e;i=0<=e?++i:--i)r.push({platformID:t.readShort(),encodingID:t.readShort(),languageID:t.readShort(),nameID:t.readShort(),length:t.readShort(),offset:this.offset+o+t.readShort()});for(s={},i=u=0,l=r.length;u<l;i=++u)n=r[i],t.pos=n.offset,c=t.readString(n.length),a=new Ke(c,n),null==s[h=n.nameID]&&(s[h]=[]),s[n.nameID].push(a);this.strings=s,this.copyright=s[0],this.fontFamily=s[1],this.fontSubfamily=s[2],this.uniqueSubfamily=s[3],this.fontName=s[4],this.version=s[5];try{this.postscriptName=s[6][0].raw.replace(/[\x00-\x19\x80-\xff]/g,"")}catch(t){this.postscriptName=s[4][0].raw.replace(/[\x00-\x19\x80-\xff]/g,"")}return this.trademark=s[7],this.manufacturer=s[8],this.designer=s[9],this.description=s[10],this.vendorUrl=s[11],this.designerUrl=s[12],this.license=s[13],this.licenseUrl=s[14],this.preferredFamily=s[15],this.preferredSubfamily=s[17],this.compatibleFull=s[18],this.sampleText=s[19]},e}(Re),$e=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="maxp",e.prototype.parse=function(t){return t.pos=this.offset,this.version=t.readInt(),this.numGlyphs=t.readUInt16(),this.maxPoints=t.readUInt16(),this.maxContours=t.readUInt16(),this.maxCompositePoints=t.readUInt16(),this.maxComponentContours=t.readUInt16(),this.maxZones=t.readUInt16(),this.maxTwilightPoints=t.readUInt16(),this.maxStorage=t.readUInt16(),this.maxFunctionDefs=t.readUInt16(),this.maxInstructionDefs=t.readUInt16(),this.maxStackElements=t.readUInt16(),this.maxSizeOfInstructions=t.readUInt16(),this.maxComponentElements=t.readUInt16(),this.maxComponentDepth=t.readUInt16()},e}(Re),Qe=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="hmtx",e.prototype.parse=function(t){var e,r,n,i,a,o,s;for(t.pos=this.offset,this.metrics=[],e=0,o=this.file.hhea.numberOfMetrics;0<=o?e<o:e>o;e=0<=o?++e:--e)this.metrics.push({advance:t.readUInt16(),lsb:t.readInt16()});for(n=this.file.maxp.numGlyphs-this.file.hhea.numberOfMetrics,this.leftSideBearings=function(){var r,i;for(i=[],e=r=0;0<=n?r<n:r>n;e=0<=n?++r:--r)i.push(t.readInt16());return i}(),this.widths=function(){var t,e,r,n;for(n=[],t=0,e=(r=this.metrics).length;t<e;t++)i=r[t],n.push(i.advance);return n}.call(this),r=this.widths[this.widths.length-1],s=[],e=a=0;0<=n?a<n:a>n;e=0<=n?++a:--a)s.push(this.widths.push(r));return s},e.prototype.forGlyph=function(t){return t in this.metrics?this.metrics[t]:{advance:this.metrics[this.metrics.length-1].advance,lsb:this.leftSideBearings[t-this.metrics.length]}},e}(Re),tr=[].slice,er=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="glyf",e.prototype.parse=function(){return this.cache={}},e.prototype.glyphFor=function(t){var e,r,n,i,a,o,s,c,u,l;return t in this.cache?this.cache[t]:(i=this.file.loca,e=this.file.contents,r=i.indexOf(t),0===(n=i.lengthOf(t))?this.cache[t]=null:(e.pos=this.offset+r,a=(o=new Te(e.read(n))).readShort(),c=o.readShort(),l=o.readShort(),s=o.readShort(),u=o.readShort(),this.cache[t]=-1===a?new nr(o,c,l,s,u):new rr(o,a,c,l,s,u),this.cache[t]))},e.prototype.encode=function(t,e,r){var n,i,a,o,s;for(a=[],i=[],o=0,s=e.length;o<s;o++)n=t[e[o]],i.push(a.length),n&&(a=a.concat(n.encode(r)));return i.push(a.length),{table:a,offsets:i}},e}(Re),rr=function(){function t(t,e,r,n,i,a){this.raw=t,this.numberOfContours=e,this.xMin=r,this.yMin=n,this.xMax=i,this.yMax=a,this.compound=!1}return t.prototype.encode=function(){return this.raw.data},t}(),nr=function(){function t(t,e,r,n,i){var a,o;for(this.raw=t,this.xMin=e,this.yMin=r,this.xMax=n,this.yMax=i,this.compound=!0,this.glyphIDs=[],this.glyphOffsets=[],a=this.raw;o=a.readShort(),this.glyphOffsets.push(a.pos),this.glyphIDs.push(a.readUInt16()),32&o;)a.pos+=1&o?4:2,128&o?a.pos+=8:64&o?a.pos+=4:8&o&&(a.pos+=2)}return 1,8,32,64,128,t.prototype.encode=function(){var t,e,r;for(e=new Te(tr.call(this.raw.data)),t=0,r=this.glyphIDs.length;t<r;++t)e.pos=this.glyphOffsets[t];return e.data},t}(),ir=function(t){function e(){return e.__super__.constructor.apply(this,arguments)}return He(e,t),e.prototype.tag="loca",e.prototype.parse=function(t){var e,r;return t.pos=this.offset,e=this.file.head.indexToLocFormat,this.offsets=0===e?function(){var e,n;for(n=[],r=0,e=this.length;r<e;r+=2)n.push(2*t.readUInt16());return n}.call(this):function(){var e,n;for(n=[],r=0,e=this.length;r<e;r+=4)n.push(t.readUInt32());return n}.call(this)},e.prototype.indexOf=function(t){return this.offsets[t]},e.prototype.lengthOf=function(t){return this.offsets[t+1]-this.offsets[t]},e.prototype.encode=function(t,e){for(var r=new Uint32Array(this.offsets.length),n=0,i=0,a=0;a<r.length;++a)if(r[a]=n,i<e.length&&e[i]==a){++i,r[a]=n;var o=this.offsets[a],s=this.offsets[a+1]-o;s>0&&(n+=s)}for(var c=new Array(4*r.length),u=0;u<r.length;++u)c[4*u+3]=255&r[u],c[4*u+2]=(65280&r[u])>>8,c[4*u+1]=(16711680&r[u])>>16,c[4*u]=(4278190080&r[u])>>24;return c},e}(Re),ar=function(){function t(t){this.font=t,this.subset={},this.unicodes={},this.next=33}return t.prototype.generateCmap=function(){var t,e,r,n,i;for(e in n=this.font.cmap.tables[0].codeMap,t={},i=this.subset)r=i[e],t[e]=n[r];return t},t.prototype.glyphsFor=function(t){var e,r,n,i,a,o,s;for(n={},a=0,o=t.length;a<o;a++)n[i=t[a]]=this.font.glyf.glyphFor(i);for(i in e=[],n)(null!=(r=n[i])?r.compound:void 0)&&e.push.apply(e,r.glyphIDs);if(e.length>0)for(i in s=this.glyphsFor(e))r=s[i],n[i]=r;return n},t.prototype.encode=function(t,e){var r,n,i,a,o,s,c,u,l,h,f,d,p,g,m;for(n in r=Ge.encode(this.generateCmap(),"unicode"),a=this.glyphsFor(t),f={0:0},m=r.charMap)f[(s=m[n]).old]=s.new;for(d in h=r.maxGlyphID,a)d in f||(f[d]=h++);return u=function(t){var e,r;for(e in r={},t)r[t[e]]=e;return r}(f),l=Object.keys(u).sort((function(t,e){return t-e})),p=function(){var t,e,r;for(r=[],t=0,e=l.length;t<e;t++)o=l[t],r.push(u[o]);return r}(),i=this.font.glyf.encode(a,p,f),c=this.font.loca.encode(i.offsets,p),g={cmap:this.font.cmap.raw(),glyf:i.table,loca:c,hmtx:this.font.hmtx.raw(),hhea:this.font.hhea.raw(),maxp:this.font.maxp.raw(),post:this.font.post.raw(),name:this.font.name.raw(),head:this.font.head.encode(e)},this.font.os2.exists&&(g["OS/2"]=this.font.os2.raw()),this.font.directory.encode(g)},t}();M.API.PDFObject=function(){var t;function e(){}return t=function(t,e){return(Array(e+1).join("0")+t).slice(-e)},e.convert=function(r){var n,i,a,o;if(Array.isArray(r))return"["+function(){var t,i,a;for(a=[],t=0,i=r.length;t<i;t++)n=r[t],a.push(e.convert(n));return a}().join(" ")+"]";if("string"==typeof r)return"/"+r;if(null!=r?r.isString:void 0)return"("+r+")";if(r instanceof Date)return"(D:"+t(r.getUTCFullYear(),4)+t(r.getUTCMonth(),2)+t(r.getUTCDate(),2)+t(r.getUTCHours(),2)+t(r.getUTCMinutes(),2)+t(r.getUTCSeconds(),2)+"Z)";if("[object Object]"==={}.toString.call(r)){for(i in a=["<<"],r)o=r[i],a.push("/"+i+" "+e.convert(o));return a.push(">>"),a.join("\n")}return""+r},e}(),t.AcroForm=xt,t.AcroFormAppearance=Lt,t.AcroFormButton=gt,t.AcroFormCheckBox=yt,t.AcroFormChoiceField=ht,t.AcroFormComboBox=dt,t.AcroFormEditBox=pt,t.AcroFormListBox=ft,t.AcroFormPasswordField=Nt,t.AcroFormPushButton=mt,t.AcroFormRadioButton=vt,t.AcroFormTextField=wt,t.GState=C,t.ShadingPattern=O,t.TilingPattern=B,t.default=M,t.jsPDF=M,Object.defineProperty(t,"__esModule",{value:!0})}));
 //# sourceMappingURL=jspdf.umd.min.js.map
+
 </script>
 <script>
 (function(){
 "use strict";
-var $=function(i){return document.getElementById(i);};
-var LVL={1:"DOK 1 · RECALL",2:"DOK 2 · APPLY",3:"DOK 3 · JUSTIFY"};
-
-/* ---------------- state ---------------- */
-var STATE={name:"",cls:"",found:{},mcq:{},written:{},fault:{},karyo:{}};
-var KEY="gamete-detective-v1";
+function $(id){return document.getElementById(id);}
+var KEY="gamete-detective-v2";
+var STATE={name:"",cls:"",karyo:{},fault:{},mcq:{},written:{}};
+try{var raw=localStorage.getItem(KEY); if(raw)STATE=JSON.parse(raw);}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(STATE));}catch(e){}}
-(function load(){try{var r=localStorage.getItem(KEY);if(!r)return;var g=JSON.parse(r);
-  if(g){STATE.name=g.name||"";STATE.cls=g.cls||"";STATE.found=g.found||{};STATE.mcq=g.mcq||{};
-  STATE.written=g.written||{};STATE.fault=g.fault||{};STATE.karyo=g.karyo||{};}}catch(e){}})();
-$("sName").value=STATE.name;$("sClass").value=STATE.cls;
+
+$("sName").value=STATE.name||""; $("sClass").value=STATE.cls||"";
 $("sName").addEventListener("input",function(){STATE.name=this.value;save();tally();});
-$("sClass").addEventListener("input",function(){STATE.cls=this.value;save();});
+$("sClass").addEventListener("input",function(){STATE.cls=this.value;save();tally();});
 
-/* ---------------- tabs ---------------- */
-var TABS=[1,2,3,4,5];
-TABS.forEach(function(n){
-  $("tab-"+n).addEventListener("click",function(){
-    TABS.forEach(function(m){
-      $("tab-"+m).setAttribute("aria-selected", m===n?"true":"false");
-      $("p-"+m).hidden = (m!==n);
-    });
-    if(n===5) tally();
-  });
-});
-
-/* ---------------- 1. shuffle ---------------- */
-var flip=[0,0];
-var TYPES=["SY","Sy","sY","sy"];
-function drawShuffle(){
-  var s=$("shuffleSvg");
-  var top1=flip[0]?"s":"S", bot1=flip[0]?"S":"s";
-  var top2=flip[1]?"y":"Y", bot2=flip[1]?"Y":"y";
-  function rod(x,y,lab,dark){
-    var c=dark?"var(--chrA)":"var(--chrB)";
-    return '<g class="chr" transform="translate('+x+','+y+')">'+
-      '<rect x="-9" y="-26" width="18" height="52" rx="9" fill="'+c+'"/>'+
-      '<text x="0" y="6" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="20" font-weight="700" fill="#fff">'+lab+'</text></g>';
-  }
-  s.innerHTML=
-    '<line x1="40" y1="110" x2="380" y2="110" stroke="var(--line)" stroke-width="3" stroke-dasharray="7 6"/>'+
-    '<text x="46" y="24" font-family="Fredoka,sans-serif" font-size="13" fill="var(--ink-soft)">to this pole</text>'+
-    '<text x="46" y="208" font-family="Fredoka,sans-serif" font-size="13" fill="var(--ink-soft)">to the other pole</text>'+
-    '<text x="140" y="196" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="13" fill="var(--ink-soft)">pair 1</text>'+
-    '<text x="280" y="196" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="13" fill="var(--ink-soft)">pair 2</text>'+
-    rod(140,62,top1,true)+rod(140,158,bot1,false)+
-    rod(280,62,top2,true)+rod(280,158,bot2,false);
-  var gTop=top1+top2, gBot=bot1+bot2;
-  STATE.found[gTop]=1; STATE.found[gBot]=1; save();
-  $("made").textContent="These gametes: "+gTop+" and "+gBot;
-  var box=$("gamebox"); box.innerHTML="";
-  TYPES.forEach(function(t){
-    var d=document.createElement("span");
-    d.className="gchip"+(STATE.found[t]?" found":""); d.textContent=t; box.appendChild(d);
-  });
-  var n=TYPES.filter(function(t){return STATE.found[t];}).length;
-  var bf=$("bigfact");
-  if(n===4){ bf.hidden=false;
-    bf.textContent="All four found. Two pairs give 4 combinations (2²). Humans have 23 pairs, so 2²³ = 8,388,608 possible gametes — and that is before crossing over mixes them further.";
-  } else { bf.hidden=true; }
-  tally();
-}
-$("flip1").addEventListener("click",function(){flip[0]=1-flip[0];drawShuffle();});
-$("flip2").addEventListener("click",function(){flip[1]=1-flip[1];drawShuffle();});
-$("rand").addEventListener("click",function(){flip=[Math.random()<.5?1:0,Math.random()<.5?1:0];drawShuffle();});
-
-/* ---------------- 2. karyotype ---------------- */
+/* ---------- STEP 1 : karyotype ---------- */
 var CASES=[
-  {id:"typ", name:"Sample A", total:46, sex:"XY", odd:null, note:"46,XY — a typical male karyotype."},
-  {id:"t21", name:"Sample B", total:47, sex:"XX", odd:21, note:"47,XX,+21 — three copies of autosome 21 (trisomy 21, Down syndrome)."},
-  {id:"x",   name:"Sample C", total:45, sex:"X",  odd:"sex", note:"45,X — only one sex chromosome (Turner syndrome)."},
-  {id:"xxy", name:"Sample D", total:47, sex:"XXY",odd:"sex", note:"47,XXY — three sex chromosomes (Klinefelter syndrome)."}
+  {id:"a",name:"Sample A",total:46,sex:"XY",odd:null,
+   note:"Sample A is normal: 46,XY. Now try Sample B."},
+  {id:"b",name:"Sample B",total:47,sex:"XX",odd:21,
+   note:"47,XX,+21. Group 21 has THREE chromosomes instead of two. This is trisomy 21 (Down syndrome)."}
 ];
-var curCase=0;
+var kIdx=0;
+(function(){
+  var sel=$("ksel");
+  CASES.forEach(function(c,i){
+    var b=document.createElement("button"); b.type="button"; b.textContent=c.name;
+    b.setAttribute("aria-pressed", i===0?"true":"false");
+    b.addEventListener("click",function(){
+      kIdx=i;
+      Array.prototype.forEach.call(sel.children,function(x,j){x.setAttribute("aria-pressed",j===i?"true":"false");});
+      drawKaryo();
+    });
+    sel.appendChild(b);
+  });
+})();
 function drawKaryo(){
-  var c=CASES[curCase], s=$("karyoSvg"), out="";
-  var rows=[[1,6],[7,12],[13,18],[19,22]];
-  var rowY=[20,100,180,260];
+  var c=CASES[kIdx], out="";
+  var rows=[[1,6],[7,12],[13,18],[19,22]], rowY=[14,92,170,248];
   rows.forEach(function(rg,ri){
-    var count=rg[1]-rg[0]+1;
-    for(var k=0;k<count;k++){
-      var num=rg[0]+k;
-      var x=40+k*108;
-      var h=Math.max(20, 52-num*1.3);
+    for(var k=0;k<=rg[1]-rg[0];k++){
+      var num=rg[0]+k, x=36+k*84, h=Math.max(20,50-num*1.2);
       var n=(c.odd===num)?3:2;
       out+='<g class="pairg'+(STATE.karyo[c.id]===String(num)?" sel":"")+'" data-p="'+num+'">';
-      out+='<rect class="hit" x="'+(x-20)+'" y="'+(rowY[ri]-4)+'" width="'+(n*18+22)+'" height="66" rx="5"/>';
+      out+='<rect class="hit" x="'+(x-18)+'" y="'+(rowY[ri]-3)+'" width="'+(n*16+20)+'" height="68" rx="6"/>';
       for(var j=0;j<n;j++){
-        var cx=x+j*18;
-        var col=(c.odd===num && j===2)?"var(--extra)":"var(--chrA)";
-        out+='<rect x="'+(cx-6)+'" y="'+(rowY[ri]+ (52-h))+'" width="12" height="'+h+'" rx="6" fill="'+col+'"/>';
-        out+='<rect x="'+(cx-6)+'" y="'+(rowY[ri]+(52-h)+h*0.34)+'" width="12" height="3" fill="var(--paper)"/>';
+        var cx=x+j*16, col=(c.odd===num&&j===2)?"var(--extra)":"var(--chrA)";
+        out+='<rect x="'+(cx-5)+'" y="'+(rowY[ri]+(50-h))+'" width="11" height="'+h+'" rx="5" fill="'+col+'"/>';
+        out+='<rect x="'+(cx-5)+'" y="'+(rowY[ri]+(50-h)+h*0.34)+'" width="11" height="3" fill="var(--paper)"/>';
       }
-      out+='<text x="'+(x+(n-1)*9)+'" y="'+(rowY[ri]+64)+'" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="12" fill="var(--ink-soft)">'+num+'</text>';
+      out+='<text x="'+(x+(n-1)*8)+'" y="'+(rowY[ri]+62)+'" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink-soft)">'+num+'</text>';
       out+='</g>';
     }
   });
-  /* sex pair at the end of row 4 */
-  var sx=40+4*108, sy=rowY[3];
-  var letters=c.sex.split("");
+  var sx=36+4*84, sy=rowY[3], letters=c.sex.split("");
   out+='<g class="pairg'+(STATE.karyo[c.id]==="sex"?" sel":"")+'" data-p="sex">';
-  out+='<rect class="hit" x="'+(sx-20)+'" y="'+(sy-4)+'" width="'+(letters.length*22+22)+'" height="66" rx="5"/>';
+  out+='<rect class="hit" x="'+(sx-18)+'" y="'+(sy-3)+'" width="'+(letters.length*20+20)+'" height="68" rx="6"/>';
   letters.forEach(function(L,j){
-    var cx=sx+j*22, h=(L==="Y")?22:40;
-    out+='<rect x="'+(cx-7)+'" y="'+(sy+(52-h))+'" width="14" height="'+h+'" rx="7" fill="var(--xx)"/>';
-    out+='<text x="'+cx+'" y="'+(sy+52)+'" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="11" font-weight="700" fill="#fff">'+L+'</text>';
+    var cx=sx+j*20, h=(L==="Y")?22:40;
+    out+='<rect x="'+(cx-6)+'" y="'+(sy+(50-h))+'" width="13" height="'+h+'" rx="6" fill="var(--xx)"/>';
+    out+='<text x="'+(cx+0.5)+'" y="'+(sy+50)+'" text-anchor="middle" font-size="11" font-weight="800" fill="#fff">'+L+'</text>';
   });
-  out+='<text x="'+(sx+(letters.length-1)*11)+'" y="'+(sy+64)+'" text-anchor="middle" font-family="Fredoka,sans-serif" font-size="12" fill="var(--ink-soft)">sex</text>';
+  out+='<text x="'+(sx+(letters.length-1)*10)+'" y="'+(sy+62)+'" text-anchor="middle" font-size="12" font-weight="700" fill="var(--ink-soft)">sex</text>';
   out+='</g>';
-  s.innerHTML=out;
+  var s=$("karyoSvg"); s.innerHTML=out;
   Array.prototype.forEach.call(s.querySelectorAll(".pairg"),function(g){
-    g.addEventListener("click",function(){
-      STATE.karyo[c.id]=g.dataset.p; save(); drawKaryo();
-    });
+    g.addEventListener("click",function(){STATE.karyo[c.id]=g.dataset.p;save();drawKaryo();});
   });
-  var picked=STATE.karyo[c.id];
-  var want=c.odd===null?null:String(c.odd);
-  var rep=$("kreport");
-  if(picked===undefined){ rep.textContent="Total chromosomes: "+c.total+". Now click the pair that is not a normal pair."; }
-  else if(picked===want){ rep.textContent="Correct. "+c.note; }
-  else if(want===null){ rep.textContent="Every pair here has exactly two. This sample is typical — 46,XY. Nothing to find."; }
-  else { rep.textContent="Not that one — look again for a group that does not have exactly two."; }
+  var picked=STATE.karyo[c.id], want=(c.odd===null?null:String(c.odd)), rep=$("kreport");
+  if(picked===undefined){rep.textContent="Total chromosomes here: "+c.total+". Now click the group that does not have exactly 2.";}
+  else if(want===null){rep.textContent="Correct — every group here has exactly 2. "+c.note;}
+  else if(picked===want){rep.textContent="Correct. "+c.note;}
+  else{rep.textContent="Not that one. Look for a group with THREE chromosomes instead of two.";}
   tally();
 }
+
+/* ---------- STEP 2 : fault cases ---------- */
+var FOPTS=["Mistake in meiosis I","Mistake in meiosis II"];
+var FAULTS=[
+  {g:[3,3,1,1],a:0,why:"All 4 gametes are wrong, so the mistake happened in meiosis I — before the cell split in two."},
+  {g:[2,2,3,1],a:1,why:"Two gametes are fine and two are wrong, so the mistake happened in meiosis II — in only one of the two cells."}
+];
+var fIdx=0;
 (function(){
-  var k=$("kcase");
-  CASES.forEach(function(c,i){
-    var b=document.createElement("button");
-    b.className="kbtn"; b.type="button"; b.textContent=c.name;
+  var sel=$("fsel");
+  FAULTS.forEach(function(f,i){
+    var b=document.createElement("button"); b.type="button"; b.textContent="Case "+(i+1);
     b.setAttribute("aria-pressed", i===0?"true":"false");
     b.addEventListener("click",function(){
-      curCase=i;
-      Array.prototype.forEach.call(k.children,function(x,j){x.setAttribute("aria-pressed",j===i?"true":"false");});
-      drawKaryo();
+      fIdx=i;
+      Array.prototype.forEach.call(sel.children,function(x,j){x.setAttribute("aria-pressed",j===i?"true":"false");});
+      drawFault();
     });
-    k.appendChild(b);
+    sel.appendChild(b);
   });
 })();
-
-/* ---------------- 3. fault finder ---------------- */
-var FAULTS=[
-  {g:[2,2,2,2], a:0, why:"Every gamete has exactly two copies. Both divisions separated correctly."},
-  {g:[3,3,1,1], a:1, why:"All four gametes are wrong, and they came out as two pairs. The homologous pair failed to separate in meiosis I, so every cell downstream was affected."},
-  {g:[2,2,3,1], a:2, why:"Two gametes are normal and two are not. The error happened in meiosis II, in only one of the two cells, so the other cell produced two healthy gametes."},
-  {g:[1,1,3,3], a:1, why:"All four are affected again. A meiosis I error always spoils all four gametes, because the mistake happens before the cell splits in two."}
-];
-var FOPTS=["No error — all normal","Nondisjunction in meiosis I","Nondisjunction in meiosis II"];
-var fIdx=0;
 function drawFault(){
-  var f=FAULTS[fIdx];
-  $("caseno").textContent="Case "+(fIdx+1)+" of "+FAULTS.length;
-  var r=$("gamrow"); r.innerHTML="";
+  var f=FAULTS[fIdx], r=$("gamrow"); r.innerHTML="";
   f.g.forEach(function(n,i){
     var d=document.createElement("div");
     d.className="gam"+(n>2?" hi":(n<2?" lo":""));
@@ -785,73 +664,48 @@ function drawFault(){
   var o=$("faultOpts"); o.innerHTML="";
   var picked=STATE.fault[fIdx];
   FOPTS.forEach(function(t,i){
-    var b=document.createElement("button");
-    b.className="opt"; b.type="button"; b.textContent=t;
+    var b=document.createElement("button"); b.className="opt"; b.type="button"; b.textContent=t;
     if(picked!==undefined&&picked!==null){
       b.disabled=true;
       if(i===f.a)b.classList.add("right");
-      if(i===picked&&picked!==f.a)b.classList.add("chosen-wrong");
+      if(i===picked&&picked!==f.a)b.classList.add("wrong");
     }
     b.addEventListener("click",function(){STATE.fault[fIdx]=i;save();drawFault();tally();});
     o.appendChild(b);
   });
   var w=$("faultWhy");
   if(picked!==undefined&&picked!==null){w.hidden=false;w.textContent=f.why;}else{w.hidden=true;}
+  tally();
 }
-$("nextCase").addEventListener("click",function(){fIdx=(fIdx+1)%FAULTS.length;drawFault();});
 
-/* ---------------- questions ---------------- */
-var QS={
- q1box:[
-  {id:"v1",lvl:1,q:"What are alleles?",opts:["Different versions of a gene","Two cells made by mitosis","The ends of a chromosome"],a:0,
-   why:"Alleles are different versions of the same gene, such as S and s."},
-  {id:"v2",lvl:2,q:"Two homologous pairs give 4 gamete types. How many would 3 pairs give?",opts:["6","8","9"],a:1,
-   why:"Each pair doubles the options: 2³ = 8."},
-  {id:"v3",lvl:3,text:true,q:"A hydra bud grows from one parent. Which type of reproduction is this, and why are the offspring genetically identical? One or two sentences."}
- ],
- q2box:[
-  {id:"k1",lvl:1,q:"What is a karyotype?",opts:["An organised image of all the chromosomes, paired and ordered by size","A type of gamete","A stage of meiosis"],a:0,
-   why:"It is a photographed chromosome lineup, matched into pairs and arranged largest to smallest."},
-  {id:"k2",lvl:1,q:"How many pairs of autosomes do humans typically have?",opts:["21","22","23"],a:1,
-   why:"22 pairs of autosomes plus one pair of sex chromosomes = 46 in total."},
-  {id:"k3",lvl:2,q:"Which of the samples involves an autosome rather than a sex chromosome?",opts:["Sample B — trisomy 21","Sample C — 45,X","Sample D — 47,XXY"],a:0,
-   why:"Chromosome 21 is an autosome. Samples C and D involve the sex chromosomes."}
- ],
- q3box:[
-  {id:"f1",lvl:1,q:"What does nondisjunction mean?",opts:["Chromosomes fail to separate properly","A chromosome breaks in half","Two gametes join together"],a:0,
-   why:"Nondisjunction is a failure to separate — in meiosis I it is the homologous pair, in meiosis II the sister chromatids."},
-  {id:"f2",lvl:2,q:"A gamete with an extra copy of chromosome 21 joins a typical gamete. How many copies will the zygote have?",opts:["Two","Three","Four"],a:1,
+/* ---------- STEP 3 : questions ---------- */
+var TAG={1:"Remember",2:"Use it",3:"Explain"};
+var QS=[
+  {id:"q1",lvl:1,q:"What does nondisjunction mean?",
+   opts:["Chromosomes fail to separate","A chromosome breaks in half","Two gametes join together"],a:0,
+   why:"Nondisjunction means they did not separate."},
+  {id:"q2",lvl:2,q:"A gamete carries an EXTRA chromosome 21. It joins a normal gamete. How many copies of 21 does the baby have?",
+   opts:["2","3","4"],a:1,
    why:"1 extra + 1 normal = 3 copies. That is trisomy 21."},
-  {id:"f3",lvl:3,text:true,q:"How can you tell a meiosis I error from a meiosis II error, just by looking at the four gametes? Explain the pattern. One or two sentences."}
- ],
- q4box:[
-  {id:"s1",lvl:1,q:"What is cell differentiation?",opts:["An unspecialised cell develops a structure suited to a specific job","A cell divides into two","Chromosomes are copied"],a:0,
-   why:"Differentiation is a cell becoming specialised — a nerve cell, a muscle cell, and so on."},
-  {id:"s2",lvl:2,q:"Which type of stem cell can become a wider range of specialised cells?",opts:["Embryonic stem cells","Adult stem cells","They are exactly the same"],a:0,
-   why:"Embryonic stem cells carry instructions for many cell types. Adult stem cells usually make a limited range."},
-  {id:"s3",lvl:2,q:"In asexual reproduction, how do the offspring compare with the parent?",opts:["Usually genetically identical","Always completely different","They have half the chromosomes"],a:0,
-   why:"One parent, no joining of gametes, so the offspring are usually identical."},
-  {id:"s4",lvl:2,q:"Which process keeps the chromosome number the same in asexual reproduction?",opts:["Meiosis","Mitosis","Fertilisation"],a:1,
-   why:"Mitosis keeps the number the same. Meiosis halves it."},
-  {id:"s5",lvl:3,text:true,q:"Why is embryonic stem cell research more controversial than adult stem cell research? One sentence."}
- ]
-};
-function renderQs(boxId){
-  var box=$(boxId); box.innerHTML="";
-  var h=document.createElement("h2"); h.textContent="Your turn"; box.appendChild(h);
-  QS[boxId].forEach(function(item){
+  {id:"q3",lvl:3,text:true,
+   q:"In Case 1 all four gametes were wrong. In Case 2 only two were wrong. Why does a mistake in meiosis I affect all four?",
+   hint:"Start like this: “A mistake in meiosis I affects all four gametes because…”"}
+];
+function renderQs(){
+  var box=$("qbox"); box.innerHTML="";
+  QS.forEach(function(item){
     var d=document.createElement("div"); d.className="q";
-    var t=document.createElement("span"); t.className="lvl l"+item.lvl; t.textContent=LVL[item.lvl]; d.appendChild(t);
+    var t=document.createElement("span"); t.className="tag t"+item.lvl; t.textContent=TAG[item.lvl];
+    d.appendChild(t);
     var p=document.createElement("p"); p.className="qt"; p.textContent=item.q; d.appendChild(p);
     if(item.text){
       var ta=document.createElement("textarea");
-      ta.placeholder="Write your answer here"; ta.value=STATE.written[item.id]||"";
+      ta.placeholder="Write one or two sentences here";
+      ta.value=STATE.written[item.id]||"";
       ta.addEventListener("input",function(){STATE.written[item.id]=this.value;save();tally();});
       d.appendChild(ta);
-      var ft=document.createElement("p"); ft.className="forteacher";
-      ft.textContent="No right answer appears for this one — your teacher reads it."; d.appendChild(ft);
+      var h=document.createElement("p"); h.className="hint"; h.textContent=item.hint; d.appendChild(h);
     } else {
-      var w=document.createElement("div"); w.className="opts";
       var why=document.createElement("p"); why.className="why"; why.hidden=true; why.textContent=item.why;
       var picked=STATE.mcq[item.id];
       item.opts.forEach(function(txt,oi){
@@ -859,163 +713,130 @@ function renderQs(boxId){
         if(picked!==undefined&&picked!==null){
           b.disabled=true;
           if(oi===item.a)b.classList.add("right");
-          if(oi===picked&&picked!==item.a)b.classList.add("chosen-wrong");
+          if(oi===picked&&picked!==item.a)b.classList.add("wrong");
           why.hidden=false;
         }
-        b.addEventListener("click",function(){STATE.mcq[item.id]=oi;save();renderQs(boxId);tally();});
-        w.appendChild(b);
+        b.addEventListener("click",function(){STATE.mcq[item.id]=oi;save();renderQs();tally();});
+        d.appendChild(b);
       });
-      d.appendChild(w); d.appendChild(why);
+      d.appendChild(why);
     }
     box.appendChild(d);
   });
 }
 
-/* ---------------- tally ---------------- */
-function allMcq(){var n=0;Object.keys(QS).forEach(function(k){QS[k].forEach(function(i){if(!i.text)n++;});});return n;}
-function rightMcq(){var n=0;Object.keys(QS).forEach(function(k){QS[k].forEach(function(i){if(!i.text&&STATE.mcq[i.id]===i.a)n++;});});return n;}
-function allWritten(){var n=0;Object.keys(QS).forEach(function(k){QS[k].forEach(function(i){if(i.text)n++;});});return n;}
-function doneWritten(){var n=0;Object.keys(QS).forEach(function(k){QS[k].forEach(function(i){if(i.text&&String(STATE.written[i.id]||"").trim())n++;});});return n;}
-function foundN(){return TYPES.filter(function(t){return STATE.found[t];}).length;}
-function faultDone(){return FAULTS.filter(function(f,i){return STATE.fault[i]!==undefined&&STATE.fault[i]!==null;}).length;}
-function faultRight(){return FAULTS.filter(function(f,i){return STATE.fault[i]===f.a;}).length;}
+/* ---------- STEP 4 : checklist ---------- */
+function kDone(){return CASES.filter(function(c){return STATE.karyo[c.id]!==undefined;}).length;}
+function fDone(){return FAULTS.filter(function(f,i){return STATE.fault[i]!==undefined&&STATE.fault[i]!==null;}).length;}
+function fRight(){return FAULTS.filter(function(f,i){return STATE.fault[i]===f.a;}).length;}
+function mcqAll(){return QS.filter(function(i){return !i.text;}).length;}
+function mcqDone(){return QS.filter(function(i){return !i.text&&STATE.mcq[i.id]!==undefined;}).length;}
+function mcqRight(){return QS.filter(function(i){return !i.text&&STATE.mcq[i.id]===i.a;}).length;}
+function writtenDone(){return QS.filter(function(i){return i.text&&String(STATE.written[i.id]||"").trim();}).length;}
+function writtenAll(){return QS.filter(function(i){return i.text;}).length;}
 function tally(){
-  $("nA").textContent=foundN()+" / 4";
-  $("nB").textContent=rightMcq()+" / "+allMcq();
-  $("nC").textContent=faultRight()+" / "+FAULTS.length;
-  $("tA").classList.toggle("done",foundN()===4);
-  $("tC").classList.toggle("done",faultDone()===FAULTS.length);
   var jobs=[];
-  if(!STATE.name.trim())jobs.push("Type your <b>name</b> at the top of the page.");
-  if(foundN()<4)jobs.push("Find all four gamete types on <b>Shuffle</b> ("+foundN()+" of 4).");
-  var kdone=CASES.filter(function(c){return STATE.karyo[c.id]!==undefined;}).length;
-  if(kdone<CASES.length)jobs.push("Check all four karyotype samples ("+kdone+" of 4).");
-  if(faultDone()<FAULTS.length)jobs.push("Solve all the fault cases ("+faultDone()+" of "+FAULTS.length+").");
-  var mq=allMcq()-Object.keys(STATE.mcq).length;
-  if(mq>0)jobs.push("Answer the remaining <b>tick questions</b>.");
-  if(doneWritten()<allWritten())jobs.push("Finish the <b>written</b> DOK 3 answers ("+doneWritten()+" of "+allWritten()+").");
-  if(!jobs.length)jobs.push("<b>Everything is done.</b> Save your PDF and upload it to Toddle.");
+  if(!String(STATE.name||"").trim())jobs.push("Type your <b>name</b> at the top.");
+  if(kDone()<CASES.length)jobs.push("Step 1 — check both samples ("+kDone()+" of "+CASES.length+").");
+  if(fDone()<FAULTS.length)jobs.push("Step 2 — answer both cases ("+fDone()+" of "+FAULTS.length+").");
+  if(mcqDone()<mcqAll())jobs.push("Step 3 — answer the tap questions ("+mcqDone()+" of "+mcqAll()+").");
+  if(writtenDone()<writtenAll())jobs.push("Step 3 — write the last answer.");
   var t=$("todo"); t.innerHTML="";
-  jobs.forEach(function(j){var li=document.createElement("li");li.innerHTML=j;t.appendChild(li);});
+  if(!jobs.length){
+    var li=document.createElement("li"); li.className="done";
+    li.textContent="Everything is done. Save your PDF."; t.appendChild(li);
+  } else {
+    jobs.forEach(function(j){var li=document.createElement("li");li.innerHTML=j;t.appendChild(li);});
+  }
 }
 
-/* ---------------- output ---------------- */
-function allItems(){var out=[];Object.keys(QS).forEach(function(k){QS[k].forEach(function(i){out.push(i);});});return out;}
-function plainText(){
-  var L=["GAMETE DETECTIVE — STUDENT ANSWER SHEET",
-    "Emirates National Schools · MYP Year 4 Science",
-    "Name: "+(STATE.name||"(not given)")+"    Class: "+(STATE.cls||"(not given)"),
-    "Date: "+new Date().toLocaleDateString(),"",
-    "Gamete types found: "+foundN()+" of 4",
-    "Tick questions correct: "+rightMcq()+" of "+allMcq(),
-    "Fault cases correct: "+faultRight()+" of "+FAULTS.length,"",
-    "--- FAULT CASES ---"];
-  FAULTS.forEach(function(f,i){
-    var p=STATE.fault[i];
-    L.push("Case "+(i+1)+"  gametes: "+f.g.join(", "));
-    L.push("Answer: "+(p===undefined||p===null?"(not answered)":FOPTS[p])+"  "+(p===f.a?"[correct]":"[not correct — correct: "+FOPTS[f.a]+"]"));
-  });
-  L.push(""); L.push("--- QUESTIONS ---");
-  allItems().forEach(function(i){
-    L.push("DOK "+i.lvl+": "+i.q);
-    if(i.text){L.push("Answer: "+(String(STATE.written[i.id]||"").trim()||"(blank)"));}
-    else{var p=STATE.mcq[i.id];
-      L.push("Answer: "+(p===undefined||p===null?"(not answered)":i.opts[p])+"  "+(p===i.a?"[correct]":"[not correct — correct: "+i.opts[i.a]+"]"));}
-  });
-  return L.join("\n");
+/* ---------- PDF ---------- */
+function nativeSave(doc,name){
+  try{
+    var url=URL.createObjectURL(doc.output("blob"));
+    var a=document.createElement("a");
+    a.href=url; a.download=name; a.style.display="none";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){try{document.body.removeChild(a);URL.revokeObjectURL(url);}catch(e){}},2000);
+    return true;
+  }catch(e){return false;}
 }
 function buildPdf(){
   var C=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF; if(!C)return null;
   var doc=new C({unit:"pt",format:"a4"}), W=595,M=46,y=0,maxY=790;
-  function page(){doc.setFillColor(138,90,30);doc.rect(0,0,W,52,"F");
-    doc.setTextColor(255,255,255);doc.setFont("helvetica","bold");doc.setFontSize(12);
+  function page(){
+    doc.setFillColor(138,90,30); doc.rect(0,0,W,52,"F");
+    doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(12);
     doc.text("EMIRATES NATIONAL SCHOOLS",M,23);
-    doc.setFont("helvetica","normal");doc.setFontSize(9.5);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9.5);
     doc.text("Gamete Detective · student answer sheet",M,38);
-    doc.setFont("helvetica","bold");doc.setFontSize(10);
+    doc.setFont("helvetica","bold"); doc.setFontSize(10);
     doc.text("MYP YEAR 4 SCIENCE",W-M,30,{align:"right"});
-    doc.setTextColor(30,30,40);y=78;}
+    doc.setTextColor(30,30,40); y=78;
+  }
   function need(h){if(y+h>maxY){doc.addPage();page();}}
-  function line(t,o){o=o||{};doc.setFont("helvetica",o.bold?"bold":(o.italic?"italic":"normal"));
+  function line(t,o){
+    o=o||{};
+    doc.setFont("helvetica",o.bold?"bold":(o.italic?"italic":"normal"));
     doc.setFontSize(o.size||10.5);
     if(o.color)doc.setTextColor(o.color[0],o.color[1],o.color[2]);else doc.setTextColor(30,30,40);
     doc.splitTextToSize(t,W-M*2-(o.indent||0)).forEach(function(x){need(16);doc.text(x,M+(o.indent||0),y);y+=(o.size||10.5)+3.5;});
-    if(o.after)y+=o.after;}
+    if(o.after)y+=o.after;
+  }
   function rule(){need(12);doc.setDrawColor(205,195,175);doc.line(M,y,W-M,y);y+=11;}
   page();
-  line("Name:  "+(STATE.name||"____________________")+"          Class:  "+(STATE.cls||"______")+
-       "          Date:  "+new Date().toLocaleDateString(),{bold:true,size:12,after:6});
+  line("Name:  "+(STATE.name||"____________________")+"      Class:  "+(STATE.cls||"______")+
+       "      Date:  "+new Date().toLocaleDateString(),{bold:true,size:12,after:6});
   rule();
-  line("Gamete types found: "+foundN()+" of 4        Tick questions: "+rightMcq()+" of "+allMcq()+
-       "        Fault cases: "+faultRight()+" of "+FAULTS.length,{bold:true,after:4});
+  line("Karyotype samples checked: "+kDone()+" of "+CASES.length+
+       "        Cases correct: "+fRight()+" of "+FAULTS.length+
+       "        Tap questions correct: "+mcqRight()+" of "+mcqAll(),{bold:true,after:4});
   rule();
-  line("Where did it go wrong?",{bold:true,size:14,color:[138,90,30],after:3});
+
+  line("STEP 1 · Karyotypes",{bold:true,size:14,color:[138,90,30],after:3});
+  CASES.forEach(function(c){
+    var p=STATE.karyo[c.id], want=(c.odd===null?null:String(c.odd));
+    var said=(p===undefined?"(not answered)":(p==="sex"?"the sex pair":"group "+p));
+    var ok=(p===want)||(want===null&&p===undefined);
+    line(c.name+" — picked "+said+"  "+(p===undefined?"":(p===want?"[correct]":"[not correct]")),{indent:8,after:2});
+  });
+  y+=4; rule();
+
+  line("STEP 2 · Where did it go wrong?",{bold:true,size:14,color:[138,90,30],after:3});
   FAULTS.forEach(function(f,i){
-    var p=STATE.fault[i], ok=(p===f.a);
+    var p=STATE.fault[i];
     line("Case "+(i+1)+"  ·  gametes: "+f.g.join(", "),{bold:true,size:10,after:1});
-    line((ok?"✓  ":"✗  ")+(p===undefined||p===null?"(not answered)":FOPTS[p]),
-      {indent:14,bold:true,color:ok?[31,122,77]:[179,50,31],after:ok?5:1});
-    if(!ok)line("Correct answer: "+FOPTS[f.a],{indent:14,size:9.5,color:[120,120,130],after:5});
+    line((p===undefined||p===null?"(not answered)":FOPTS[p])+"  "+
+         (p===f.a?"[correct]":(p===undefined||p===null?"":"[not correct — correct: "+FOPTS[f.a]+"]")),{indent:8,after:5});
   });
   rule();
-  line("Questions",{bold:true,size:14,color:[138,90,30],after:3});
-  allItems().forEach(function(i){
-    line("DOK "+i.lvl+"  ·  "+i.q,{bold:true,size:10,after:1});
-    if(i.text){var t=String(STATE.written[i.id]||"").trim();
-      line(t||"(left blank)",{italic:!t,indent:14,after:5,color:t?[30,30,40]:[150,150,150]});}
-    else{var p=STATE.mcq[i.id],ok=(p===i.a);
-      line((ok?"✓  ":"✗  ")+(p===undefined||p===null?"(not answered)":i.opts[p]),
-        {indent:14,bold:true,color:ok?[31,122,77]:[179,50,31],after:ok?5:1});
-      if(!ok)line("Correct answer: "+i.opts[i.a],{indent:14,size:9.5,color:[120,120,130],after:5});}
+
+  line("STEP 3 · Questions",{bold:true,size:14,color:[138,90,30],after:3});
+  QS.forEach(function(i){
+    line("DOK "+i.lvl+" · "+i.q,{bold:true,size:10.5,after:1});
+    if(i.text){
+      line(String(STATE.written[i.id]||"").trim()||"(blank)",{indent:8,italic:true,after:6});
+    } else {
+      var p=STATE.mcq[i.id];
+      line("Answer: "+(p===undefined||p===null?"(not answered)":i.opts[p])+"  "+
+           (p===i.a?"[correct]":(p===undefined||p===null?"":"[not correct — correct: "+i.opts[i.a]+"]")),{indent:8,after:6});
+    }
   });
-  need(96);rule();
-  line("Teacher feedback",{bold:true,size:12,after:4});
-  doc.setDrawColor(190,180,165);doc.roundedRect(M,y,W-M*2,64,6,6);y+=74;
-  line("Formative task — not graded against MYP criteria.",{italic:true,size:9,color:[140,140,150]});
   return doc;
-}
-function fileName(){
-  var n=(STATE.name||"student").trim().replace(/[^A-Za-z0-9 \-]/g,"").replace(/\s+/g,"-");
-  var c=(STATE.cls||"").trim().replace(/[^A-Za-z0-9]/g,"");
-  return "GameteDetective-"+(n||"student")+(c?"-"+c:"")+".pdf";
-}
-var downloads=null;
-if(window.claude&&typeof window.claude.use==="function"){
-  window.claude.use("downloads").then(function(d){downloads=d;}).catch(function(){downloads=null;});
-}
-function nativeSave(doc,name){
-  try{var url=URL.createObjectURL(doc.output("blob"));var a=document.createElement("a");
-    a.href=url;a.download=name;a.style.display="none";document.body.appendChild(a);a.click();
-    setTimeout(function(){try{document.body.removeChild(a);URL.revokeObjectURL(url);}catch(e){}},2000);
-    return true;}catch(e){return false;}
 }
 $("savePdf").addEventListener("click",function(){
   var msg=$("saveMsg");
-  if(!STATE.name.trim()){msg.textContent="Type your name at the top of the page first.";msg.className="msg no";$("sName").focus();return;}
   var doc=buildPdf();
-  if(!doc){msg.textContent="The PDF tool did not load. Use “Copy my answers as text” instead.";msg.className="msg no";return;}
-  msg.textContent="Preparing your PDF…";msg.className="msg";
-  function ok(){msg.textContent="Saved. Now upload it to Toddle.";msg.className="msg ok";}
-  function fb(){if(nativeSave(doc,fileName()))ok();
-    else{msg.textContent="That did not save. Use “Copy my answers as text” instead.";msg.className="msg no";}}
-  if(downloads){downloads.save({filename:fileName(),data:doc.output("blob")}).then(ok).catch(function(e){
-    if(e&&e.code==="declined"){msg.textContent="You cancelled the save. Press the button again when you are ready.";msg.className="msg no";}
-    else fb();});}
-  else fb();
-});
-$("copyAll").addEventListener("click",function(){
-  var msg=$("saveMsg");
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(plainText()).then(function(){
-      msg.textContent="Copied. Paste it into a document, then upload that to Toddle.";msg.className="msg ok";
-    }).catch(function(){msg.textContent="Could not copy automatically. Ask your teacher for help.";msg.className="msg no";});
-  } else {msg.textContent="Copying is not available here.";msg.className="msg no";}
+  if(!doc){msg.textContent="Could not build the PDF. Tell your teacher.";msg.className="msg no";return;}
+  var safe=(STATE.name||"student").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-|-$/g,"")||"student";
+  var cls=(STATE.cls||"").replace(/[^A-Za-z0-9]+/g,"");
+  var fname="GameteDetective-"+safe+(cls?"-"+cls:"")+".pdf";
+  if(nativeSave(doc,fname)){msg.textContent="Saved as "+fname+". Now upload it to Toddle.";msg.className="msg ok";}
+  else{msg.textContent="Could not save. Try again, or tell your teacher.";msg.className="msg no";}
 });
 
-/* ---------------- go ---------------- */
-drawShuffle(); drawKaryo(); drawFault();
-["q1box","q2box","q3box","q4box"].forEach(renderQs);
-tally();
+/* ---------- go ---------- */
+drawKaryo(); drawFault(); renderQs(); tally();
 })();
 </script>
 </body>
